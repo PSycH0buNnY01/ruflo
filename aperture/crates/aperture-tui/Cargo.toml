@@ -1,0 +1,22 @@
+[package]
+name = "aperture-tui"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+description = "Native ratatui binary for Aperture"
+
+[[bin]]
+name = "aperture"
+path = "src/main.rs"
+
+[dependencies]
+aperture-core = { path = "../aperture-core" }
+aperture-render = { path = "../aperture-render" }
+aperture-data = { path = "../aperture-data" }
+ratatui = { workspace = true }
+crossterm = { workspace = true }
+tokio = { workspace = true }
+anyhow = { workspace = true }
