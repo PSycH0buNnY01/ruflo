@@ -63,11 +63,7 @@ pub struct ViewLine {
 /// purely-local verbs (HELP / CLS / EXIT / LIST). `seq` is the monotonic
 /// counter the caller maintains; `last_symbol` is the last FOCUSed symbol
 /// (used by ASK so the oracle has context when the prompt is bare).
-pub fn envelope_for(
-    cmd: &Command,
-    seq: u64,
-    last_symbol: Option<&str>,
-) -> Option<Envelope> {
+pub fn envelope_for(cmd: &Command, seq: u64, last_symbol: Option<&str>) -> Option<Envelope> {
     let (msg_type, to, payload) = build_route(cmd, last_symbol)?;
     Some(Envelope {
         id: format!("aperture-{:08x}", seq),
@@ -392,7 +388,10 @@ pub fn local_render(cmd: &Command) -> Option<Vec<ViewLine>> {
 }
 
 fn line(pane: Pane, text: &str) -> ViewLine {
-    ViewLine { pane, text: text.into() }
+    ViewLine {
+        pane,
+        text: text.into(),
+    }
 }
 
 /// Current time as an ISO-8601 string with millisecond precision. On wasm32

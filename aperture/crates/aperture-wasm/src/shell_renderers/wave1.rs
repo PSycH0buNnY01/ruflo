@@ -59,7 +59,10 @@ pub(super) fn render_watch(p: &Value, verb: &str) -> Vec<ViewLine> {
 }
 
 pub(super) fn render_ask(p: &Value) -> Vec<ViewLine> {
-    let answer = p.get("answer").and_then(Value::as_str).unwrap_or("(no answer)");
+    let answer = p
+        .get("answer")
+        .and_then(Value::as_str)
+        .unwrap_or("(no answer)");
     vec![line(Pane::Oracle, answer.to_string())]
 }
 
@@ -72,7 +75,10 @@ pub(super) fn render_news(p: &Value) -> Vec<ViewLine> {
         .cloned()
         .unwrap_or_default();
     for h in headlines.iter().take(10) {
-        let title = h.get("title").and_then(Value::as_str).unwrap_or("(untitled)");
+        let title = h
+            .get("title")
+            .and_then(Value::as_str)
+            .unwrap_or("(untitled)");
         out.push(line(Pane::News, format!("• {title}")));
     }
     out
@@ -80,7 +86,11 @@ pub(super) fn render_news(p: &Value) -> Vec<ViewLine> {
 
 pub(super) fn render_macro(p: &Value) -> Vec<ViewLine> {
     let mut out = vec![line(Pane::Macro, "MACRO".to_string())];
-    let rows = p.get("rows").and_then(Value::as_array).cloned().unwrap_or_default();
+    let rows = p
+        .get("rows")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default();
     for r in rows.iter().take(20) {
         let name = r.get("name").and_then(Value::as_str).unwrap_or("?");
         let value = r
@@ -94,7 +104,11 @@ pub(super) fn render_macro(p: &Value) -> Vec<ViewLine> {
 
 pub(super) fn render_yields(p: &Value) -> Vec<ViewLine> {
     let mut out = vec![line(Pane::Yields, "YIELDS".to_string())];
-    let curve = p.get("curve").and_then(Value::as_array).cloned().unwrap_or_default();
+    let curve = p
+        .get("curve")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default();
     for r in curve.iter().take(20) {
         let tenor = r.get("tenor").and_then(Value::as_str).unwrap_or("?");
         let yld = r.get("yield_pct").and_then(Value::as_f64).unwrap_or(0.0);
@@ -170,32 +184,53 @@ pub(super) fn render_insider(p: &Value) -> Vec<ViewLine> {
 pub(super) fn render_financials(p: &Value) -> Vec<ViewLine> {
     let sym = p.get("symbol").and_then(Value::as_str).unwrap_or("?");
     let mut out = vec![line(Pane::Financials, format!("FINANCIALS {sym}"))];
-    if let Some(rev) = p.pointer("/data/income_ttm/revenue").and_then(Value::as_f64) {
+    if let Some(rev) = p
+        .pointer("/data/income_ttm/revenue")
+        .and_then(Value::as_f64)
+    {
         out.push(line(Pane::Financials, format!("revenue (ttm)  {rev:.0}")));
     }
-    if let Some(ni) = p.pointer("/data/income_ttm/net_income").and_then(Value::as_f64) {
+    if let Some(ni) = p
+        .pointer("/data/income_ttm/net_income")
+        .and_then(Value::as_f64)
+    {
         out.push(line(Pane::Financials, format!("net income (ttm)  {ni:.0}")));
     }
     if let Some(a) = p
         .pointer("/data/balance_mrq/total_assets")
         .and_then(Value::as_f64)
     {
-        out.push(line(Pane::Financials, format!("total assets (mrq)  {a:.0}")));
+        out.push(line(
+            Pane::Financials,
+            format!("total assets (mrq)  {a:.0}"),
+        ));
     }
     if let Some(fcf) = p
         .pointer("/data/cashflow_ttm/free_cashflow")
         .and_then(Value::as_f64)
     {
-        out.push(line(Pane::Financials, format!("free cashflow (ttm)  {fcf:.0}")));
+        out.push(line(
+            Pane::Financials,
+            format!("free cashflow (ttm)  {fcf:.0}"),
+        ));
     }
     out
 }
 
 pub(super) fn render_crypto(p: &Value) -> Vec<ViewLine> {
     let sym = p.get("symbol").and_then(Value::as_str).unwrap_or("?");
-    let last = p.pointer("/data/last").and_then(Value::as_f64).unwrap_or(0.0);
-    let vol = p.pointer("/data/vol_24h").and_then(Value::as_f64).unwrap_or(0.0);
-    let cap = p.pointer("/data/market_cap").and_then(Value::as_f64).unwrap_or(0.0);
+    let last = p
+        .pointer("/data/last")
+        .and_then(Value::as_f64)
+        .unwrap_or(0.0);
+    let vol = p
+        .pointer("/data/vol_24h")
+        .and_then(Value::as_f64)
+        .unwrap_or(0.0);
+    let cap = p
+        .pointer("/data/market_cap")
+        .and_then(Value::as_f64)
+        .unwrap_or(0.0);
     vec![
         line(Pane::Crypto, format!("CRYPTO {sym}")),
         line(

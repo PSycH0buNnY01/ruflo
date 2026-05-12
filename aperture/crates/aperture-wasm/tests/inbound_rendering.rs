@@ -40,7 +40,9 @@ fn news_result_renders_headlines_in_news_pane() {
     );
     let lines = render_inbound(&env);
     assert!(lines.iter().any(|l| l.pane == Pane::News));
-    assert!(lines.iter().any(|l| l.text.contains("Apple beats earnings")));
+    assert!(lines
+        .iter()
+        .any(|l| l.text.contains("Apple beats earnings")));
 }
 
 #[test]
@@ -258,11 +260,9 @@ fn earnings_result_renders_events_in_earnings_pane() {
     );
     let lines = render_inbound(&env);
     assert!(lines.iter().any(|l| l.pane == Pane::Earnings));
-    assert!(lines
-        .iter()
-        .any(|l| l.text.contains("AAPL")
-            && l.text.contains("2026-07-25")
-            && l.text.contains("1.62")));
+    assert!(lines.iter().any(|l| l.text.contains("AAPL")
+        && l.text.contains("2026-07-25")
+        && l.text.contains("1.62")));
 }
 
 #[test]
@@ -366,9 +366,7 @@ fn tech_result_renders_indicator_value() {
     assert!(lines.iter().any(|l| l.pane == Pane::Tech));
     assert!(lines
         .iter()
-        .any(|l| l.text.contains("AAPL")
-            && l.text.contains("SMA")
-            && l.text.contains("247.8500")));
+        .any(|l| l.text.contains("AAPL") && l.text.contains("SMA") && l.text.contains("247.8500")));
 }
 
 #[test]

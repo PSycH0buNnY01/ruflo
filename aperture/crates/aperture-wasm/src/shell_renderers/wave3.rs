@@ -61,10 +61,7 @@ pub(super) fn render_movers(p: &Value) -> Vec<ViewLine> {
             ));
         } else {
             let chg = r.get("change_pct").and_then(Value::as_f64).unwrap_or(0.0);
-            out.push(line(
-                Pane::Movers,
-                format!("{sym}  {chg:+.2}%  {last:.2}"),
-            ));
+            out.push(line(Pane::Movers, format!("{sym}  {chg:+.2}%  {last:.2}")));
         }
     }
     out
@@ -164,10 +161,7 @@ pub(super) fn render_tech(p: &Value) -> Vec<ViewLine> {
         .pointer("/data/value")
         .and_then(Value::as_f64)
         .unwrap_or(0.0);
-    vec![line(
-        Pane::Tech,
-        format!("{sym}  {indicator} = {value:.4}"),
-    )]
+    vec![line(Pane::Tech, format!("{sym}  {indicator} = {value:.4}"))]
 }
 
 pub(super) fn render_corr(p: &Value) -> Vec<ViewLine> {
@@ -180,10 +174,7 @@ pub(super) fn render_corr(p: &Value) -> Vec<ViewLine> {
                 .collect()
         })
         .unwrap_or_default();
-    let mut out = vec![line(
-        Pane::Corr,
-        format!("corr [{}]", symbols.join(" ")),
-    )];
+    let mut out = vec![line(Pane::Corr, format!("corr [{}]", symbols.join(" ")))];
     let matrix = p
         .pointer("/data/matrix")
         .and_then(Value::as_array)
@@ -200,10 +191,7 @@ pub(super) fn render_corr(p: &Value) -> Vec<ViewLine> {
             .iter()
             .map(|v| format!("{:>6.3}", v.as_f64().unwrap_or(0.0)))
             .collect();
-        out.push(line(
-            Pane::Corr,
-            format!("{sym:<6} {}", cells.join(" ")),
-        ));
+        out.push(line(Pane::Corr, format!("{sym:<6} {}", cells.join(" "))));
     }
     out
 }
@@ -228,10 +216,7 @@ pub(super) fn render_filings(p: &Value) -> Vec<ViewLine> {
             .and_then(Value::as_str)
             .or_else(|| f.get("fiscal_period").and_then(Value::as_str))
             .unwrap_or("");
-        out.push(line(
-            Pane::Filings,
-            format!("{form}  {filed}  {detail}"),
-        ));
+        out.push(line(Pane::Filings, format!("{form}  {filed}  {detail}")));
     }
     out
 }
@@ -253,10 +238,7 @@ pub(super) fn render_blotter(p: &Value) -> Vec<ViewLine> {
         .and_then(Value::as_array)
         .cloned()
         .unwrap_or_default();
-    let mut out = vec![line(
-        Pane::Order,
-        format!("Blotter (n={})", orders.len()),
-    )];
+    let mut out = vec![line(Pane::Order, format!("Blotter (n={})", orders.len()))];
     if orders.is_empty() {
         out.push(line(Pane::Order, "(empty)".into()));
         return out;

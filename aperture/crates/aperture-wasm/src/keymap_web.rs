@@ -102,11 +102,21 @@ mod tests {
     use super::*;
 
     fn ev(key: &str, ctrl: bool) -> KeyEvent<'_> {
-        KeyEvent { key, ctrl, alt: false, meta: false }
+        KeyEvent {
+            key,
+            ctrl,
+            alt: false,
+            meta: false,
+        }
     }
 
     fn alt_ev(key: &str) -> KeyEvent<'_> {
-        KeyEvent { key, ctrl: false, alt: true, meta: false }
+        KeyEvent {
+            key,
+            ctrl: false,
+            alt: true,
+            meta: false,
+        }
     }
 
     #[test]

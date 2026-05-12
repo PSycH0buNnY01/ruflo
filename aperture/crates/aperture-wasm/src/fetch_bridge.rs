@@ -44,7 +44,11 @@ pub async fn fetch_json(upstream_url: &str) -> Result<String, JsValue> {
     let signal = controller.signal();
 
     let init = Object::new();
-    Reflect::set(&init, &JsValue::from_str("method"), &JsValue::from_str("GET"))?;
+    Reflect::set(
+        &init,
+        &JsValue::from_str("method"),
+        &JsValue::from_str("GET"),
+    )?;
     Reflect::set(&init, &JsValue::from_str("signal"), &signal)?;
 
     // Schedule abort after FETCH_TIMEOUT_MS. Closure must outlive the await
@@ -53,10 +57,7 @@ pub async fn fetch_json(upstream_url: &str) -> Result<String, JsValue> {
     let abort_cb = Closure::once(move || {
         abort_controller.abort();
     });
-    let timeout_id = window_set_timeout(
-        abort_cb.as_ref().unchecked_ref(),
-        FETCH_TIMEOUT_MS,
-    );
+    let timeout_id = window_set_timeout(abort_cb.as_ref().unchecked_ref(), FETCH_TIMEOUT_MS);
 
     let promise = window_fetch(&JsValue::from_str(&proxied), &init);
     let resp_result = JsFuture::from(promise).await;
@@ -86,8 +87,7 @@ pub async fn fetch_json(upstream_url: &str) -> Result<String, JsValue> {
     // already filters but the wasm caller shouldn't trust it blindly.
     if let Ok(Some(ct)) = resp.headers().get("content-type") {
         let ct_lower = ct.to_ascii_lowercase();
-        let accepted = ct_lower.starts_with("application/json")
-            || ct_lower.starts_with("text/");
+        let accepted = ct_lower.starts_with("application/json") || ct_lower.starts_with("text/");
         if !accepted {
             return Err(JsValue::from_str(&format!(
                 "aperture fetch: rejected content-type '{}' (expected application/json or text/*)",

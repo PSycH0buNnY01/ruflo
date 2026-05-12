@@ -14,6 +14,20 @@ import {
 type Status = "idle" | "loading" | "ready" | "missing";
 const PANE_LIMIT = 100;
 
+// Commands run once on load so the workspace opens populated instead of all
+// "(no data — try …)" placeholders. Each is just a normal `App.execute`, so
+// the data comes from the same path a user-typed command would.
+const SEED_COMMANDS = [
+  "MACRO GO",
+  "YIELDS GO",
+  "FX EUR GO",
+  "MOVERS GO",
+  "SPX MEMBERS GO",
+  "AAPL DESC GO",
+  "AAPL CHART 6M GO",
+  "AAPL NEWS GO",
+] as const;
+
 const emptyPanes = (): Record<Pane, string[]> => {
   const out = {} as Record<Pane, string[]>;
   for (const p of PANE_ORDER) out[p.id] = [];
@@ -43,25 +57,33 @@ export default function Aperture() {
   const [history, setHistory] = useState<string[]>([]);
   const appRef = useRef<ApertureApp | null>(null);
 
-  const pushPane = useCallback((pane: Pane, text: string) => {
+  // Apply a batch of view lines. The `system` pane is a running log
+  // (append); every other pane shows the latest result for its verb, so a
+  // re-run (or the demo seed) replaces its contents instead of stacking
+  // ever-growing lines.
+  const pushViews = useCallback((views: ViewLine[]) => {
+    if (views.length === 0) return;
+    const byPane = new Map<Pane, string[]>();
+    for (const v of views) {
+      const arr = byPane.get(v.pane);
+      if (arr) arr.push(v.text);
+      else byPane.set(v.pane, [v.text]);
+    }
     setPanes((prev) => {
-      const next = [...prev[pane], text];
-      if (next.length > PANE_LIMIT) next.splice(0, next.length - PANE_LIMIT);
-      return { ...prev, [pane]: next };
+      const next = { ...prev };
+      for (const [pane, lines] of byPane) {
+        next[pane] =
+          pane === "system"
+            ? [...prev.system, ...lines].slice(-PANE_LIMIT)
+            : lines.slice(-PANE_LIMIT);
+      }
+      return next;
     });
+    const sysLines = byPane.get("system");
+    if (sysLines) setLog((l) => [...l, ...sysLines]);
   }, []);
 
-  const pushViews = useCallback(
-    (views: ViewLine[]) => {
-      for (const v of views) {
-        pushPane(v.pane, v.text);
-        if (v.pane === "system") setLog((l) => [...l, v.text]);
-      }
-    },
-    [pushPane],
-  );
-
-  // Load the wasm-pack artifact once on mount.
+  // Load the wasm-pack artifact once on mount, then seed the workspace.
   useEffect(() => {
     let cancelled = false;
     setStatus("loading");
@@ -70,6 +92,18 @@ export default function Aperture() {
         if (cancelled) return;
         appRef.current = app;
         setStatus("ready");
+        // Populate panes with a demo snapshot so the workspace isn't blank.
+        for (const cmd of SEED_COMMANDS) {
+          try {
+            const result = app.execute(cmd) as ExecuteResult;
+            if ("ok" in result && Array.isArray(result.ok.views)) {
+              pushViews(result.ok.views);
+            }
+          } catch {
+            /* a bad seed command shouldn't break load */
+          }
+        }
+        setLog((l) => [...l, "(demo snapshot loaded — type your own SYMBOL VERB GO)"]);
       })
       .catch((e: unknown) => {
         if (cancelled) return;
@@ -79,6 +113,8 @@ export default function Aperture() {
     return () => {
       cancelled = true;
     };
+    // `pushViews` is stable (useCallback); intentional one-shot effect.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Listen for inbound envelopes posted on `window` by the swarm-bus relay.

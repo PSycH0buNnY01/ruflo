@@ -53,3 +53,6 @@ coordination/orchestration/*
 claude-flow
 # Removed Windows wrapper files per user request
 hive-mind-prompt-*.txt
+
+# aperture-wasm artifact (built out-of-band by plugins/ruflo-aperture/scripts/build-wasm.sh)
+public/aperture/
