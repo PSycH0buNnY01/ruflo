@@ -10,15 +10,27 @@ Heavy jobs — multi-year walk-forward backtests, large Monte-Carlo runs, parame
 
 ## Prerequisites
 
-> ✅ **Fixed in `neural-trader@2.7.2`** ([upstream PR #109](https://github.com/ruvnet/neural-trader/pull/109), shipped 2026-05-14).
-> The fork-bomb regression originally reported in #1974 (3,049 stuck processes, ~120 GB RAM in ~80 min on macOS Apple Silicon) is resolved. The install hook no longer spawns a recursive `npm install`. Use 2.7.2+ on all platforms.
+> ✅ **Fully fixed in `neural-trader@2.7.6`** (shipped 2026-05-14; see [post-mortem gist](https://gist.github.com/ruvnet/a1aca90a5c299d89fa92e905dab11041) and [announcement #1981](https://github.com/ruvnet/ruflo/issues/1981)).
+> Resolves four compounding bugs that made the package unusable since v2.5.0:
+> 1. Install-hook fork-bomb (#1974 — 120 GB RAM on Apple Silicon) — fixed in 2.7.2 ([neural-trader#109](https://github.com/ruvnet/neural-trader/pull/109)).
+> 2. `require('neural-trader')` always threw `Cannot find module './src/cli/lib/napi-loader-shared'` — missing files restored in 2.7.5 ([neural-trader#111](https://github.com/ruvnet/neural-trader/pull/111)).
+> 3. `cargo build` aborted on `aarch64-apple-darwin` (`fasthash-sys` x86-only SIMD) — placeholder hash replaced with stdlib `DefaultHasher` in 2.7.5.
+> 4. npm tarball claimed 5 platform binaries, shipped 1 — `darwin-arm64` + `darwin-x64` added in 2.7.6 (`linux-arm64-gnu` / `win32-x64-msvc` will fill in on the next tag-triggered release).
 
 ```bash
 # Recommended — keeps --ignore-scripts as defense in depth. The install
 # hook is safe in 2.7.2+, but --ignore-scripts protects against any
 # future install-script regression on this or transitive packages.
-npm install --ignore-scripts neural-trader@2.7.2
+npm install --ignore-scripts neural-trader@^2.7.6
 ```
+
+| Platform | Native binding in 2.7.6 |
+|----------|------------------------|
+| `linux-x64-gnu` | ✅ |
+| `darwin-arm64` (Apple Silicon) | ✅ first time ever shipped |
+| `darwin-x64` (Intel Macs) | ✅ first time ever shipped |
+| `linux-arm64-gnu` | ⏳ JS surface works, native calls throw at runtime |
+| `win32-x64-msvc` | ⏳ JS surface works, native calls throw at runtime |
 
 > 🚨 **If you must use an older version** (`neural-trader@2.7.1` or below — same fork-bomb risk on every non-linux-x64 host) always pass `--ignore-scripts` to skip the malicious install hook. The `linux-x64` binary is hardcoded inline in the tarball, so on `linux-x64` the package still works after `--ignore-scripts`. On other platforms `--ignore-scripts` at least won't fork-bomb your machine.
 >
