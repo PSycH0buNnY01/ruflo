@@ -17,7 +17,7 @@ Heavy jobs — multi-year walk-forward backtests, large Monte-Carlo runs, parame
 > 3. `cargo build` aborted on `aarch64-apple-darwin` (`fasthash-sys` x86-only SIMD) — placeholder hash replaced with stdlib `DefaultHasher` in 2.7.5.
 > 4. npm tarball claimed 5 platform binaries, shipped 1 — `darwin-arm64` + `darwin-x64` added in 2.7.6.
 >
-> The 2.8.x line additionally adds a flag-style CLI dispatcher (`--backtest`, `--signal scan`, `--risk assess`, `--portfolio optimize`, `--regime`, `--train`, `--predict`, `--strategy-create`) running real math (SMA crossover / RSI mean-reversion / pairs z-score / adaptive regime-switching / multi-indicator RSI+MACD+Bollinger) against real Yahoo Finance data via `--live`. Supports `--walk-forward`, `--monte-carlo`, `--symbols A,B,C`, `--benchmark SPY`, `--optimize --param "name:min:max:step"`. The runtime smoke ([scripts/runtime-smoke.sh](scripts/runtime-smoke.sh)) covers 17 documented entry points end-to-end.
+> The 2.8.x line additionally adds a flag-style CLI dispatcher (`--backtest`, `--signal scan`, `--risk assess`, `--portfolio optimize`, `--regime`, `--train`, `--predict`, `--strategy-create`) running real math (SMA crossover / RSI mean-reversion / pairs z-score / adaptive regime-switching / multi-indicator RSI+MACD+Bollinger) against real Yahoo Finance data via `--live`. Supports `--walk-forward`, `--monte-carlo`, `--symbols A,B,C`, `--benchmark SPY`, `--optimize --param "name:min:max:step"`. The runtime smoke ([scripts/runtime-smoke.sh](scripts/runtime-smoke.sh)) covers 20 documented entry points end-to-end (basic commands + Kelly + walk-forward + Monte Carlo + optimize + multi-symbol + pairs + adaptive + multi-indicator).
 
 ```bash
 # Recommended — keeps --ignore-scripts as defense in depth. The install
