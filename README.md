@@ -156,11 +156,17 @@ This adds slash commands and agent definitions only. The Ruflo MCP server is NOT
 
 ### CLI Install
 
-```bash
-# One-line install
-curl -fsSL https://cdn.jsdelivr.net/gh/ruvnet/ruflo@main/scripts/install.sh | bash
+**macOS / Linux / WSL / Git-Bash:**
 
-# Or via npx (interactive setup)
+```bash
+# One-line install (POSIX shells only — see Windows note below)
+curl -fsSL https://cdn.jsdelivr.net/gh/ruvnet/ruflo@main/scripts/install.sh | bash
+```
+
+**All platforms (including native Windows PowerShell / cmd):**
+
+```bash
+# Interactive setup wizard — runs identically on every platform
 npx ruflo@latest init wizard
 
 # Quick non-interactive init
@@ -169,6 +175,8 @@ npx ruflo@latest init wizard
 # Or install globally
 npm install -g ruflo@latest
 ```
+
+> 💡 **Windows users:** the `curl ... | bash` form needs a POSIX shell (Git-Bash, WSL, MSYS). The `npx ruflo@latest init wizard` line works natively in PowerShell and cmd. If you hit an `'bash' is not recognized` error, use the `npx` line instead — both end up running the same init flow.
 
 ### MCP Server
 
