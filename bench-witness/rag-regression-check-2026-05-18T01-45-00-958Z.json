@@ -1,0 +1,142 @@
+{
+  "summary": {
+    "trackedCount": 9,
+    "checkedCount": 0,
+    "skippedCount": 9,
+    "passedCount": 0,
+    "failedCount": 0,
+    "allPassed": true,
+    "checks": [],
+    "skipped": [
+      {
+        "benchmark": "rag-real-text",
+        "metricPath": "results.adaptive.recallAt5",
+        "reason": "metric path returned undefined"
+      },
+      {
+        "benchmark": "rag-real-text",
+        "metricPath": "results.compound.recallAt5",
+        "reason": "metric path returned undefined"
+      },
+      {
+        "benchmark": "rag-real-text",
+        "metricPath": "results.hyde.recallAt5",
+        "reason": "metric path returned undefined"
+      },
+      {
+        "benchmark": "rag-adaptive-router",
+        "metricPath": "results.accuracy",
+        "reason": "metric path returned undefined"
+      },
+      {
+        "benchmark": "rag-router-ablation",
+        "metricPath": "results.adaptive.meanRecallAt5",
+        "reason": "metric path returned undefined"
+      },
+      {
+        "benchmark": "rag-lazy-router",
+        "metricPath": "results.embedsSaved",
+        "reason": "metric path returned undefined"
+      },
+      {
+        "benchmark": "rag-lazy-router",
+        "metricPath": "results.embedsSavedPercent",
+        "reason": "metric path returned undefined"
+      },
+      {
+        "benchmark": "rag-cached-router",
+        "metricPath": "results.cacheStats.hitRate",
+        "reason": "metric path returned undefined"
+      },
+      {
+        "benchmark": "rag-cached-router",
+        "metricPath": "results.embedsSavedPercent",
+        "reason": "metric path returned undefined"
+      }
+    ],
+    "ledgerHead": {
+      "sequence": 6,
+      "contentHash": "c1699495a56655bd01175137c5ef65af576085ecad8da4b63e1f32e42d2a0088",
+      "benchmark": "rag-cached-router"
+    }
+  },
+  "witness": {
+    "benchmark": "rag-regression-check",
+    "timestamp": "2026-05-18T01:45:00.958Z",
+    "commit": "ac9754780c92cbaa1aa50cab970fa31770a8e900",
+    "model": "ledger-derived",
+    "corpus": {
+      "id": "dfca312d4df45c44389e031b3c75d84dc0c3fc1a096559bf4ed79fad194f3479",
+      "size": 9
+    },
+    "queries": {
+      "id": "b0c6ccfcc0efbb7c8bc74886519a791bc564049597b29a2cd1c6f5f2b640868b",
+      "count": 6
+    },
+    "results": {
+      "trackedCount": 9,
+      "checkedCount": 0,
+      "skippedCount": 9,
+      "passedCount": 0,
+      "failedCount": 0,
+      "allPassed": true,
+      "checks": [],
+      "skipped": [
+        {
+          "benchmark": "rag-real-text",
+          "metricPath": "results.adaptive.recallAt5",
+          "reason": "metric path returned undefined"
+        },
+        {
+          "benchmark": "rag-real-text",
+          "metricPath": "results.compound.recallAt5",
+          "reason": "metric path returned undefined"
+        },
+        {
+          "benchmark": "rag-real-text",
+          "metricPath": "results.hyde.recallAt5",
+          "reason": "metric path returned undefined"
+        },
+        {
+          "benchmark": "rag-adaptive-router",
+          "metricPath": "results.accuracy",
+          "reason": "metric path returned undefined"
+        },
+        {
+          "benchmark": "rag-router-ablation",
+          "metricPath": "results.adaptive.meanRecallAt5",
+          "reason": "metric path returned undefined"
+        },
+        {
+          "benchmark": "rag-lazy-router",
+          "metricPath": "results.embedsSaved",
+          "reason": "metric path returned undefined"
+        },
+        {
+          "benchmark": "rag-lazy-router",
+          "metricPath": "results.embedsSavedPercent",
+          "reason": "metric path returned undefined"
+        },
+        {
+          "benchmark": "rag-cached-router",
+          "metricPath": "results.cacheStats.hitRate",
+          "reason": "metric path returned undefined"
+        },
+        {
+          "benchmark": "rag-cached-router",
+          "metricPath": "results.embedsSavedPercent",
+          "reason": "metric path returned undefined"
+        }
+      ],
+      "ledgerHead": {
+        "sequence": 6,
+        "contentHash": "c1699495a56655bd01175137c5ef65af576085ecad8da4b63e1f32e42d2a0088",
+        "benchmark": "rag-cached-router"
+      }
+    },
+    "contentHash": "a5cac03ed3a509949a846c413dce04229825006cd266629bff4c77313a8f67e6",
+    "signature": "7060a86f138904293c81057fc7044e7b14fd551b66f06cba57bbf4bb742ec667ff13f1ed53059eee70180fc81b068098b7a59c130ca3cfbba8f2c17f6421e603",
+    "publicKey": "302a300506032b65700321004134343ea920100c71983788372f1d2a683c4c6a01976ccfab1c678ba30ea904",
+    "signatureAlgorithm": "ed25519"
+  }
+}

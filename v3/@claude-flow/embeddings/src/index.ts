@@ -228,6 +228,23 @@ export {
   type CompoundIntentTrace,
 } from './compound-retrieval.js';
 
+// ADR-121 Phase 22 — Ledger analyzer + regression detection.
+// Uses the Phase 18 chained ledger to detect performance regressions
+// on every new benchmark run. The chain becomes a self-auditing
+// performance history instead of just provenance.
+export {
+  getMetricAtPath,
+  entriesForBenchmark,
+  pickBaseline,
+  checkRegression,
+  checkRegressionBatch,
+  type BaselineSelection,
+  type RegressionCheckOptions,
+  type RegressionCheckResult,
+  type RegressionBatchInput,
+  type RegressionBatchResult,
+} from './ledger-analyzer.js';
+
 // ADR-121 Phase 18 — Chained witness ledger.
 // Builds a hash chain over Phase 15 witness manifests so the FULL
 // HISTORY of benchmark runs becomes tamper-evident. Editing any

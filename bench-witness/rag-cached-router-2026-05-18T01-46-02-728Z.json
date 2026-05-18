@@ -1,0 +1,158 @@
+{
+  "summary": {
+    "workloadSize": 9,
+    "uniqueQueries": 3,
+    "repeatRate": 0.6666666666666666,
+    "decisionMatches": 9,
+    "decisionEquivalence": true,
+    "coldEmbeds": 27,
+    "warmEmbeds": 7,
+    "embedsSaved": 20,
+    "embedsSavedPercent": 74.07407407407408,
+    "coldTotalMs": 29.687291,
+    "warmTotalMs": 7.38575,
+    "speedupRatio": 4.019536404562841,
+    "cacheStats": {
+      "entries": 7,
+      "hits": 20,
+      "misses": 7,
+      "hitRate": 0.7407407407407407,
+      "approxByteSize": 10752
+    }
+  },
+  "perQuery": {
+    "cold": [
+      {
+        "query": "auth basic",
+        "primitive": "rrf",
+        "embedsUsed": 3
+      },
+      {
+        "query": "cache TTL",
+        "primitive": "plain",
+        "embedsUsed": 3
+      },
+      {
+        "query": "deployment",
+        "primitive": "rrf",
+        "embedsUsed": 3
+      },
+      {
+        "query": "auth basic",
+        "primitive": "rrf",
+        "embedsUsed": 3
+      },
+      {
+        "query": "cache TTL",
+        "primitive": "plain",
+        "embedsUsed": 3
+      },
+      {
+        "query": "deployment",
+        "primitive": "rrf",
+        "embedsUsed": 3
+      },
+      {
+        "query": "deployment",
+        "primitive": "rrf",
+        "embedsUsed": 3
+      },
+      {
+        "query": "cache TTL",
+        "primitive": "plain",
+        "embedsUsed": 3
+      },
+      {
+        "query": "auth basic",
+        "primitive": "rrf",
+        "embedsUsed": 3
+      }
+    ],
+    "warm": [
+      {
+        "query": "auth basic",
+        "primitive": "rrf",
+        "embedsUsed": 3
+      },
+      {
+        "query": "cache TTL",
+        "primitive": "plain",
+        "embedsUsed": 3
+      },
+      {
+        "query": "deployment",
+        "primitive": "rrf",
+        "embedsUsed": 3
+      },
+      {
+        "query": "auth basic",
+        "primitive": "rrf",
+        "embedsUsed": 3
+      },
+      {
+        "query": "cache TTL",
+        "primitive": "plain",
+        "embedsUsed": 3
+      },
+      {
+        "query": "deployment",
+        "primitive": "rrf",
+        "embedsUsed": 3
+      },
+      {
+        "query": "deployment",
+        "primitive": "rrf",
+        "embedsUsed": 3
+      },
+      {
+        "query": "cache TTL",
+        "primitive": "plain",
+        "embedsUsed": 3
+      },
+      {
+        "query": "auth basic",
+        "primitive": "rrf",
+        "embedsUsed": 3
+      }
+    ]
+  },
+  "witness": {
+    "benchmark": "rag-cached-router",
+    "timestamp": "2026-05-18T01:46:02.728Z",
+    "commit": "ac9754780c92cbaa1aa50cab970fa31770a8e900",
+    "model": "Xenova/all-MiniLM-L6-v2",
+    "corpus": {
+      "id": "60542c0e864278b3888db8d13bb41fc139a25d9e035b811c96d3cdb234924db7",
+      "size": 12
+    },
+    "queries": {
+      "id": "f1824811b2448a5c9a8230b4b65da4b9ee643ebbbf99ea7eb24196f2d841c235",
+      "count": 9
+    },
+    "results": {
+      "workloadSize": 9,
+      "uniqueQueries": 3,
+      "repeatRate": 0.6666666666666666,
+      "decisionMatches": 9,
+      "decisionEquivalence": true,
+      "coldEmbeds": 27,
+      "warmEmbeds": 7,
+      "embedsSaved": 20,
+      "embedsSavedPercent": 74.07407407407408,
+      "coldTotalMs": 29.687291,
+      "warmTotalMs": 7.38575,
+      "speedupRatio": 4.019536404562841,
+      "cacheStats": {
+        "entries": 7,
+        "hits": 20,
+        "misses": 7,
+        "hitRate": 0.7407407407407407,
+        "approxByteSize": 10752
+      }
+    },
+    "contentHash": "7583ef51125fff2740d758adebbc38091c5e31853b461426d037067deb4504b8",
+    "signature": "2914b0363c40cc197939518ff8d26fd4d71897eaefd7a4f0b2663a0c681cbd8a06ad4331fc132bca8c82d318cc1f4380646182207a42293fa6e3c94b3cc2ae0b",
+    "publicKey": "302a300506032b6570032100c3c0897ad311eabc959de8b5ec7509159a2deedb1876a83142aa4f23a19bd478",
+    "signatureAlgorithm": "ed25519"
+  }
+}

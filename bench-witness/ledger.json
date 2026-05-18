@@ -56,8 +56,8 @@
         }
       },
       "contentHash": "8958ef94a2a84be6202f808915a1a00bbd8ec245fc49010909df6f67fe41733a",
-      "signature": "0791f7319765694d5243d6d6e3222426520e5debb158dd79d713cdee58f529bec047e0602e3b42781b9a9511c4d730bb14d763c73ce251da35b8d8edcdb8cd0a",
-      "publicKey": "302a300506032b6570032100b2edad1ce53fe04ee2388f03896abcd2ceb50f48b36d233d21baacc511d4252b",
+      "signature": "07718e51876e2508fb07cf4a9483d2b549a520497fd1336826bb07d90fc35820d1f4a177677a13cc9476cc8b58eecbb40727b84696af9b7784e7d3f698b79c02",
+      "publicKey": "302a300506032b65700321003a2b0336c3c90e3059cf5fea42c4a3651badeafdb54af68049d0c79600d3a333",
       "signatureAlgorithm": "ed25519",
       "prevContentHash": null,
       "sequence": 1
@@ -147,8 +147,8 @@
         }
       },
       "contentHash": "b87db0cd2cbf469265542ca659c48621cb2d81bb63a3c070029a8134cfc016a5",
-      "signature": "6a88d50977d4b30ceea1ab850447076d5e6c962256aaf49fd8f4af63c2a2bbd85f2537679f3951522479e4e318bc950f017eccfdfe7e1737310870d267dcc20b",
-      "publicKey": "302a300506032b6570032100b2edad1ce53fe04ee2388f03896abcd2ceb50f48b36d233d21baacc511d4252b",
+      "signature": "fc5818ba4de1721099b0143eb090992ec41bd59a177ca461a991971a7444543d1c6dc8f3c1dc07fbe4611ce6d4ffdffbe1730120a7839aafc2620cdd2a4ae70f",
+      "publicKey": "302a300506032b65700321003a2b0336c3c90e3059cf5fea42c4a3651badeafdb54af68049d0c79600d3a333",
       "signatureAlgorithm": "ed25519",
       "prevContentHash": "8958ef94a2a84be6202f808915a1a00bbd8ec245fc49010909df6f67fe41733a",
       "sequence": 2
@@ -226,8 +226,8 @@
         }
       },
       "contentHash": "3e2009dbff5f0a5bd8d0e3139f6cd92f612ec4f23b201572d39ad51704822bde",
-      "signature": "c70aa69425442f1d266b90cb873b59286414f021328ae5a3e707a0e2a3344de094ee5eb8a00d1283124454fdbc81e552049427f44fe3836781a9afe5a7caa30b",
-      "publicKey": "302a300506032b6570032100b2edad1ce53fe04ee2388f03896abcd2ceb50f48b36d233d21baacc511d4252b",
+      "signature": "7b891aafbf43f976a6e6530d457d6e1e75d6c607bf0286159221a76f078d42eb7667f43935054441c524f8d2c49f5d78f626be6cd36b29dc9fc925b091d29b0f",
+      "publicKey": "302a300506032b65700321003a2b0336c3c90e3059cf5fea42c4a3651badeafdb54af68049d0c79600d3a333",
       "signatureAlgorithm": "ed25519",
       "prevContentHash": "b87db0cd2cbf469265542ca659c48621cb2d81bb63a3c070029a8134cfc016a5",
       "sequence": 3
@@ -299,8 +299,8 @@
         }
       },
       "contentHash": "e96537707e609ca410c2c3d71543633edbcf8d90d782e34c81f007cbd1013873",
-      "signature": "f69745f5c68effd3bbdd3a04507fb1cf35db52041520116f4aef32e3377d95e48c73d5529e369d04452f0da86211e745a9ddc3e4df52fb0f6e94ad668c053802",
-      "publicKey": "302a300506032b6570032100b2edad1ce53fe04ee2388f03896abcd2ceb50f48b36d233d21baacc511d4252b",
+      "signature": "89c4ebefb0f3f1b3cc1021664cf16e83ba752717cdddcfce350639a5794093f07482804133025cb94e967a5599dde17e41a62238d82f2e69f69d526e7ca99b0a",
+      "publicKey": "302a300506032b65700321003a2b0336c3c90e3059cf5fea42c4a3651badeafdb54af68049d0c79600d3a333",
       "signatureAlgorithm": "ed25519",
       "prevContentHash": "3e2009dbff5f0a5bd8d0e3139f6cd92f612ec4f23b201572d39ad51704822bde",
       "sequence": 4
@@ -339,8 +339,8 @@
         }
       },
       "contentHash": "9c9bb28beee9847df12c93646bdadb8a99906dbabc8c325aa9b79c4ccf5bb075",
-      "signature": "b33be61cd89af1b2e50054be59d79a397d5f1a6c1bc6cde39a6b8e061992f76205988cb07690e9a0895ff7dfac01399f3c47241a47e4016aa857a8777cea030f",
-      "publicKey": "302a300506032b6570032100b2edad1ce53fe04ee2388f03896abcd2ceb50f48b36d233d21baacc511d4252b",
+      "signature": "8ffe7472b3a71c1861aac57832b2b4896dac0443e7bcc2ea998e50f99761d056ef373f9e1384366787b19647a780854f6ad6ed838b6e1f9d332e2830229a2803",
+      "publicKey": "302a300506032b65700321003a2b0336c3c90e3059cf5fea42c4a3651badeafdb54af68049d0c79600d3a333",
       "signatureAlgorithm": "ed25519",
       "prevContentHash": "e96537707e609ca410c2c3d71543633edbcf8d90d782e34c81f007cbd1013873",
       "sequence": 5
@@ -389,11 +389,251 @@
         }
       },
       "contentHash": "c1699495a56655bd01175137c5ef65af576085ecad8da4b63e1f32e42d2a0088",
-      "signature": "533ed645be202b5b0605cfc8fc063d735678e71c2fbc5e3a4ad644014d3ac3c5e581f43e61ae9f5105264b7a6c0a623c2b8cc85916d1b86fffb01408a358c202",
-      "publicKey": "302a300506032b6570032100b2edad1ce53fe04ee2388f03896abcd2ceb50f48b36d233d21baacc511d4252b",
+      "signature": "831fd4163c9c755603e184806c33eaafa474775802839ab91ef2af91a48aaa139c8c0431f6316901d01460c0c4f18cec00305da3d5e1e94cd2c0fe645a2c7c0f",
+      "publicKey": "302a300506032b65700321003a2b0336c3c90e3059cf5fea42c4a3651badeafdb54af68049d0c79600d3a333",
       "signatureAlgorithm": "ed25519",
       "prevContentHash": "9c9bb28beee9847df12c93646bdadb8a99906dbabc8c325aa9b79c4ccf5bb075",
       "sequence": 6
+    },
+    {
+      "benchmark": "rag-regression-check",
+      "timestamp": "2026-05-18T01:45:00.958Z",
+      "commit": "ac9754780c92cbaa1aa50cab970fa31770a8e900",
+      "model": "ledger-derived",
+      "corpus": {
+        "id": "dfca312d4df45c44389e031b3c75d84dc0c3fc1a096559bf4ed79fad194f3479",
+        "size": 9
+      },
+      "queries": {
+        "id": "b0c6ccfcc0efbb7c8bc74886519a791bc564049597b29a2cd1c6f5f2b640868b",
+        "count": 6
+      },
+      "results": {
+        "__chain": {
+          "prevContentHash": "c1699495a56655bd01175137c5ef65af576085ecad8da4b63e1f32e42d2a0088",
+          "sequence": 7
+        },
+        "originalContentHash": "a5cac03ed3a509949a846c413dce04229825006cd266629bff4c77313a8f67e6",
+        "originalSignature": "7060a86f138904293c81057fc7044e7b14fd551b66f06cba57bbf4bb742ec667ff13f1ed53059eee70180fc81b068098b7a59c130ca3cfbba8f2c17f6421e603",
+        "originalPublicKey": "302a300506032b65700321004134343ea920100c71983788372f1d2a683c4c6a01976ccfab1c678ba30ea904",
+        "results": {
+          "trackedCount": 9,
+          "checkedCount": 0,
+          "skippedCount": 9,
+          "passedCount": 0,
+          "failedCount": 0,
+          "allPassed": true,
+          "checks": [],
+          "skipped": [
+            {
+              "benchmark": "rag-real-text",
+              "metricPath": "results.adaptive.recallAt5",
+              "reason": "metric path returned undefined"
+            },
+            {
+              "benchmark": "rag-real-text",
+              "metricPath": "results.compound.recallAt5",
+              "reason": "metric path returned undefined"
+            },
+            {
+              "benchmark": "rag-real-text",
+              "metricPath": "results.hyde.recallAt5",
+              "reason": "metric path returned undefined"
+            },
+            {
+              "benchmark": "rag-adaptive-router",
+              "metricPath": "results.accuracy",
+              "reason": "metric path returned undefined"
+            },
+            {
+              "benchmark": "rag-router-ablation",
+              "metricPath": "results.adaptive.meanRecallAt5",
+              "reason": "metric path returned undefined"
+            },
+            {
+              "benchmark": "rag-lazy-router",
+              "metricPath": "results.embedsSaved",
+              "reason": "metric path returned undefined"
+            },
+            {
+              "benchmark": "rag-lazy-router",
+              "metricPath": "results.embedsSavedPercent",
+              "reason": "metric path returned undefined"
+            },
+            {
+              "benchmark": "rag-cached-router",
+              "metricPath": "results.cacheStats.hitRate",
+              "reason": "metric path returned undefined"
+            },
+            {
+              "benchmark": "rag-cached-router",
+              "metricPath": "results.embedsSavedPercent",
+              "reason": "metric path returned undefined"
+            }
+          ],
+          "ledgerHead": {
+            "sequence": 6,
+            "contentHash": "c1699495a56655bd01175137c5ef65af576085ecad8da4b63e1f32e42d2a0088",
+            "benchmark": "rag-cached-router"
+          }
+        }
+      },
+      "contentHash": "9ae4548b749147abce9839b22d0ea8bfb99c01aa3b32d0d563046d975c9a707a",
+      "signature": "d2eb2c992e3a51995ae7886c24172fcd3a31e9c959f6632f0008c7fd07028268c202f900504330eafd1ae1d22412c03137be0e212c1411d4e2bd37c969ce6502",
+      "publicKey": "302a300506032b65700321003a2b0336c3c90e3059cf5fea42c4a3651badeafdb54af68049d0c79600d3a333",
+      "signatureAlgorithm": "ed25519",
+      "prevContentHash": "c1699495a56655bd01175137c5ef65af576085ecad8da4b63e1f32e42d2a0088",
+      "sequence": 7
+    },
+    {
+      "benchmark": "rag-cached-router",
+      "timestamp": "2026-05-18T01:46:02.728Z",
+      "commit": "ac9754780c92cbaa1aa50cab970fa31770a8e900",
+      "model": "Xenova/all-MiniLM-L6-v2",
+      "corpus": {
+        "id": "60542c0e864278b3888db8d13bb41fc139a25d9e035b811c96d3cdb234924db7",
+        "size": 12
+      },
+      "queries": {
+        "id": "f1824811b2448a5c9a8230b4b65da4b9ee643ebbbf99ea7eb24196f2d841c235",
+        "count": 9
+      },
+      "results": {
+        "__chain": {
+          "prevContentHash": "9ae4548b749147abce9839b22d0ea8bfb99c01aa3b32d0d563046d975c9a707a",
+          "sequence": 8
+        },
+        "originalContentHash": "7583ef51125fff2740d758adebbc38091c5e31853b461426d037067deb4504b8",
+        "originalSignature": "2914b0363c40cc197939518ff8d26fd4d71897eaefd7a4f0b2663a0c681cbd8a06ad4331fc132bca8c82d318cc1f4380646182207a42293fa6e3c94b3cc2ae0b",
+        "originalPublicKey": "302a300506032b6570032100c3c0897ad311eabc959de8b5ec7509159a2deedb1876a83142aa4f23a19bd478",
+        "results": {
+          "workloadSize": 9,
+          "uniqueQueries": 3,
+          "repeatRate": 0.6666666666666666,
+          "decisionMatches": 9,
+          "decisionEquivalence": true,
+          "coldEmbeds": 27,
+          "warmEmbeds": 7,
+          "embedsSaved": 20,
+          "embedsSavedPercent": 74.07407407407408,
+          "coldTotalMs": 29.687291,
+          "warmTotalMs": 7.38575,
+          "speedupRatio": 4.019536404562841,
+          "cacheStats": {
+            "entries": 7,
+            "hits": 20,
+            "misses": 7,
+            "hitRate": 0.7407407407407407,
+            "approxByteSize": 10752
+          }
+        }
+      },
+      "contentHash": "c750eb49e9cef227d6a996a9c9aeee9ac3028e7b85b9a6d75b0c6faeab2c978d",
+      "signature": "71d17c536dc904bca9a86e14ed3b3c8f47194e38d2a90c1c5f6499758b6d85990c6c0bb50ef900c0d72959be6eb90ce21979820e3f51862b02229fcb7506df01",
+      "publicKey": "302a300506032b65700321003a2b0336c3c90e3059cf5fea42c4a3651badeafdb54af68049d0c79600d3a333",
+      "signatureAlgorithm": "ed25519",
+      "prevContentHash": "9ae4548b749147abce9839b22d0ea8bfb99c01aa3b32d0d563046d975c9a707a",
+      "sequence": 8
+    },
+    {
+      "benchmark": "rag-regression-check",
+      "timestamp": "2026-05-18T01:46:23.404Z",
+      "commit": "ac9754780c92cbaa1aa50cab970fa31770a8e900",
+      "model": "ledger-derived",
+      "corpus": {
+        "id": "473383a017657b31fbd3b3cfc47837c6f101d5883b13760e4db46c4ccb6f45ea",
+        "size": 8
+      },
+      "queries": {
+        "id": "5b2b51977092f1f047b18ef1129e7708ab578a125184f5fca0e734de9b82312f",
+        "count": 8
+      },
+      "results": {
+        "__chain": {
+          "prevContentHash": "c750eb49e9cef227d6a996a9c9aeee9ac3028e7b85b9a6d75b0c6faeab2c978d",
+          "sequence": 9
+        },
+        "originalContentHash": "05bf2279ac87b624ed510ccd211d71fb215143c3d657c6c901db58f5c6e9fab6",
+        "originalSignature": "68f85639372ed211c84f5aac265324c5ae0adf44a2253261fecac148e64a2b8649cd7c294ed6eb11df7063a7e068b1068eadca30aaa2b589203931c566cfb904",
+        "originalPublicKey": "302a300506032b6570032100a85a26962458fdff276ee14a2e32ccb6cafc73aeca3740e1566a78d4e96b5f04",
+        "results": {
+          "trackedCount": 8,
+          "checkedCount": 2,
+          "skippedCount": 6,
+          "passedCount": 2,
+          "failedCount": 0,
+          "allPassed": true,
+          "checks": [
+            {
+              "benchmark": "rag-cached-router",
+              "metricPath": "results.results.cacheStats.hitRate",
+              "currentValue": 0.7407407407407407,
+              "baselineValue": 0.7407407407407407,
+              "baselineFrom": {
+                "sequence": 6,
+                "timestamp": "2026-05-18T01:28:51.966Z"
+              },
+              "percentChange": 0,
+              "passed": true
+            },
+            {
+              "benchmark": "rag-cached-router",
+              "metricPath": "results.results.embedsSavedPercent",
+              "currentValue": 74.07407407407408,
+              "baselineValue": 74.07407407407408,
+              "baselineFrom": {
+                "sequence": 6,
+                "timestamp": "2026-05-18T01:28:51.966Z"
+              },
+              "percentChange": 0,
+              "passed": true
+            }
+          ],
+          "skipped": [
+            {
+              "benchmark": "rag-real-text",
+              "metricPath": "results.results.compound.recallAt5",
+              "reason": "only one historical entry; nothing to regress against"
+            },
+            {
+              "benchmark": "rag-real-text",
+              "metricPath": "results.results.hyde.recallAt5",
+              "reason": "only one historical entry; nothing to regress against"
+            },
+            {
+              "benchmark": "rag-adaptive-router",
+              "metricPath": "results.results.accuracy",
+              "reason": "only one historical entry; nothing to regress against"
+            },
+            {
+              "benchmark": "rag-router-ablation",
+              "metricPath": "results.results.adaptive.meanRecallAt5",
+              "reason": "only one historical entry; nothing to regress against"
+            },
+            {
+              "benchmark": "rag-lazy-router",
+              "metricPath": "results.results.embedsSaved",
+              "reason": "only one historical entry; nothing to regress against"
+            },
+            {
+              "benchmark": "rag-lazy-router",
+              "metricPath": "results.results.embedsSavedPercent",
+              "reason": "only one historical entry; nothing to regress against"
+            }
+          ],
+          "ledgerHead": {
+            "sequence": 8,
+            "contentHash": "c750eb49e9cef227d6a996a9c9aeee9ac3028e7b85b9a6d75b0c6faeab2c978d",
+            "benchmark": "rag-cached-router"
+          }
+        }
+      },
+      "contentHash": "574a9d6796c35aed142dafa9994ad74c4f3c3e87407b3ccab6a874537a512d2b",
+      "signature": "3e623411bdb1fd203b3870a5464fd1b0e4922c059579627ce37cf1cb5c963d02dff2755a9e35056c9aefa2024cff30853129cc9a813a41fd7a0f1215385bf107",
+      "publicKey": "302a300506032b65700321003a2b0336c3c90e3059cf5fea42c4a3651badeafdb54af68049d0c79600d3a333",
+      "signatureAlgorithm": "ed25519",
+      "prevContentHash": "c750eb49e9cef227d6a996a9c9aeee9ac3028e7b85b9a6d75b0c6faeab2c978d",
+      "sequence": 9
     }
   ]
 }

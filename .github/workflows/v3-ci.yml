@@ -667,6 +667,59 @@ jobs:
           name: rag-router-ablation-witness
           path: bench-witness/rag-router-ablation-*.json
 
+  rag-regression-check:
+    # ADR-121 Phase 22 — Performance regression detection over the chain.
+    # The witness ledger has historical benchmark numbers; this guard
+    # checks the latest entry of each benchmark against the prior
+    # baseline, fails CI if any tracked metric regressed beyond the
+    # threshold. Witness-signed regression report uploaded as artifact.
+    name: rag benchmark regression check + witness (#2036, ADR-121 Phase 22)
+    runs-on: ubuntu-latest
+    needs: [rag-witness-ledger]
+    if: always()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build embeddings
+        run: |
+          cd v3/@claude-flow/embeddings
+          npm install --no-audit --no-fund --legacy-peer-deps
+          npx tsc -p tsconfig.json
+
+      - name: Download chained ledger artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: rag-benchmark-ledger
+          path: bench-witness
+
+      - name: Run regression check (witness-signed)
+        shell: bash
+        run: node scripts/check-benchmark-regression.mjs
+
+      - name: Verify regression-report witness (independent process)
+        shell: bash
+        run: |
+          FILE=$(ls -t bench-witness/rag-regression-check-*.json | head -1)
+          node --input-type=module -e "
+            import fs from 'node:fs';
+            const { verify } = await import('./v3/@claude-flow/embeddings/dist/witness.js');
+            const m = JSON.parse(fs.readFileSync('$FILE', 'utf8'));
+            if (!verify(m.witness)) { console.error('VERIFY FAILED'); process.exit(1); }
+            console.log('Regression-check witness verifies OK:', m.witness.contentHash);
+          "
+
+      - name: Upload regression report as CI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rag-regression-check-witness
+          path: bench-witness/rag-regression-check-*.json
+
   rag-witness-ledger:
     # ADR-121 Phase 18 — Chained witness ledger.
     # Each benchmark run produces a per-run signed manifest (Phase 15).

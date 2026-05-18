@@ -1,0 +1,162 @@
+{
+  "summary": {
+    "trackedCount": 8,
+    "checkedCount": 2,
+    "skippedCount": 6,
+    "passedCount": 2,
+    "failedCount": 0,
+    "allPassed": true,
+    "checks": [
+      {
+        "benchmark": "rag-cached-router",
+        "metricPath": "results.results.cacheStats.hitRate",
+        "currentValue": 0.7407407407407407,
+        "baselineValue": 0.7407407407407407,
+        "baselineFrom": {
+          "sequence": 6,
+          "timestamp": "2026-05-18T01:28:51.966Z"
+        },
+        "percentChange": 0,
+        "passed": true
+      },
+      {
+        "benchmark": "rag-cached-router",
+        "metricPath": "results.results.embedsSavedPercent",
+        "currentValue": 74.07407407407408,
+        "baselineValue": 74.07407407407408,
+        "baselineFrom": {
+          "sequence": 6,
+          "timestamp": "2026-05-18T01:28:51.966Z"
+        },
+        "percentChange": 0,
+        "passed": true
+      }
+    ],
+    "skipped": [
+      {
+        "benchmark": "rag-real-text",
+        "metricPath": "results.results.compound.recallAt5",
+        "reason": "only one historical entry; nothing to regress against"
+      },
+      {
+        "benchmark": "rag-real-text",
+        "metricPath": "results.results.hyde.recallAt5",
+        "reason": "only one historical entry; nothing to regress against"
+      },
+      {
+        "benchmark": "rag-adaptive-router",
+        "metricPath": "results.results.accuracy",
+        "reason": "only one historical entry; nothing to regress against"
+      },
+      {
+        "benchmark": "rag-router-ablation",
+        "metricPath": "results.results.adaptive.meanRecallAt5",
+        "reason": "only one historical entry; nothing to regress against"
+      },
+      {
+        "benchmark": "rag-lazy-router",
+        "metricPath": "results.results.embedsSaved",
+        "reason": "only one historical entry; nothing to regress against"
+      },
+      {
+        "benchmark": "rag-lazy-router",
+        "metricPath": "results.results.embedsSavedPercent",
+        "reason": "only one historical entry; nothing to regress against"
+      }
+    ],
+    "ledgerHead": {
+      "sequence": 8,
+      "contentHash": "c750eb49e9cef227d6a996a9c9aeee9ac3028e7b85b9a6d75b0c6faeab2c978d",
+      "benchmark": "rag-cached-router"
+    }
+  },
+  "witness": {
+    "benchmark": "rag-regression-check",
+    "timestamp": "2026-05-18T01:46:23.404Z",
+    "commit": "ac9754780c92cbaa1aa50cab970fa31770a8e900",
+    "model": "ledger-derived",
+    "corpus": {
+      "id": "473383a017657b31fbd3b3cfc47837c6f101d5883b13760e4db46c4ccb6f45ea",
+      "size": 8
+    },
+    "queries": {
+      "id": "5b2b51977092f1f047b18ef1129e7708ab578a125184f5fca0e734de9b82312f",
+      "count": 8
+    },
+    "results": {
+      "trackedCount": 8,
+      "checkedCount": 2,
+      "skippedCount": 6,
+      "passedCount": 2,
+      "failedCount": 0,
+      "allPassed": true,
+      "checks": [
+        {
+          "benchmark": "rag-cached-router",
+          "metricPath": "results.results.cacheStats.hitRate",
+          "currentValue": 0.7407407407407407,
+          "baselineValue": 0.7407407407407407,
+          "baselineFrom": {
+            "sequence": 6,
+            "timestamp": "2026-05-18T01:28:51.966Z"
+          },
+          "percentChange": 0,
+          "passed": true
+        },
+        {
+          "benchmark": "rag-cached-router",
+          "metricPath": "results.results.embedsSavedPercent",
+          "currentValue": 74.07407407407408,
+          "baselineValue": 74.07407407407408,
+          "baselineFrom": {
+            "sequence": 6,
+            "timestamp": "2026-05-18T01:28:51.966Z"
+          },
+          "percentChange": 0,
+          "passed": true
+        }
+      ],
+      "skipped": [
+        {
+          "benchmark": "rag-real-text",
+          "metricPath": "results.results.compound.recallAt5",
+          "reason": "only one historical entry; nothing to regress against"
+        },
+        {
+          "benchmark": "rag-real-text",
+          "metricPath": "results.results.hyde.recallAt5",
+          "reason": "only one historical entry; nothing to regress against"
+        },
+        {
+          "benchmark": "rag-adaptive-router",
+          "metricPath": "results.results.accuracy",
+          "reason": "only one historical entry; nothing to regress against"
+        },
+        {
+          "benchmark": "rag-router-ablation",
+          "metricPath": "results.results.adaptive.meanRecallAt5",
+          "reason": "only one historical entry; nothing to regress against"
+        },
+        {
+          "benchmark": "rag-lazy-router",
+          "metricPath": "results.results.embedsSaved",
+          "reason": "only one historical entry; nothing to regress against"
+        },
+        {
+          "benchmark": "rag-lazy-router",
+          "metricPath": "results.results.embedsSavedPercent",
+          "reason": "only one historical entry; nothing to regress against"
+        }
+      ],
+      "ledgerHead": {
+        "sequence": 8,
+        "contentHash": "c750eb49e9cef227d6a996a9c9aeee9ac3028e7b85b9a6d75b0c6faeab2c978d",
+        "benchmark": "rag-cached-router"
+      }
+    },
+    "contentHash": "05bf2279ac87b624ed510ccd211d71fb215143c3d657c6c901db58f5c6e9fab6",
+    "signature": "68f85639372ed211c84f5aac265324c5ae0adf44a2253261fecac148e64a2b8649cd7c294ed6eb11df7063a7e068b1068eadca30aaa2b589203931c566cfb904",
+    "publicKey": "302a300506032b6570032100a85a26962458fdff276ee14a2e32ccb6cafc73aeca3740e1566a78d4e96b5f04",
+    "signatureAlgorithm": "ed25519"
+  }
+}
