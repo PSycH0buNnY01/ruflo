@@ -268,9 +268,12 @@ export {
   verifyEntry,
   verifyLedger,
   generateLedgerKeypair,
+  coSign,
+  verifyCosignatureAgainst,
   type BenchmarkLedger,
   type LedgerEntry,
   type ChainVerifyResult,
+  type CosignatureRecord,
 } from './witness-ledger.js';
 
 // ADR-121 Phase 15 — Benchmark witness manifest (ed25519-signed).

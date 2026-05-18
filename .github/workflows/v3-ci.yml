@@ -667,6 +667,57 @@ jobs:
           name: rag-router-ablation-witness
           path: bench-witness/rag-router-ablation-*.json
 
+  rag-multisig-attestation:
+    # ADR-121 Phase 24 — Multi-signer ledger entries (M-of-N threshold).
+    # Demonstrates the M-of-N attestation pattern for adversarial
+    # benchmarking: primary signer (benchmark-runner) + N co-signers
+    # (third-party-verifier, release-auditor). Pass criterion: entry
+    # verifies at every threshold from 1 up to N, fails at N+1, and
+    # the contentHash + primary signature are unchanged by co-signing.
+    name: rag multi-signer attestation + witness (#2036, ADR-121 Phase 24)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build embeddings
+        run: |
+          cd v3/@claude-flow/embeddings
+          npm install --no-audit --no-fund --legacy-peer-deps
+          npx tsc -p tsconfig.json
+
+      - name: Run multi-signer attestation demo (witness-signed)
+        shell: bash
+        run: node scripts/benchmark-rag-multisig-attestation.mjs
+
+      - name: Verify multi-signer witness (independent process)
+        shell: bash
+        run: |
+          FILE=$(ls -t bench-witness/rag-multisig-attestation-*.json | head -1)
+          node --input-type=module -e "
+            import fs from 'node:fs';
+            const { verify } = await import('./v3/@claude-flow/embeddings/dist/witness.js');
+            const { verifyEntry } = await import('./v3/@claude-flow/embeddings/dist/witness-ledger.js');
+            const m = JSON.parse(fs.readFileSync('$FILE', 'utf8'));
+            if (!verify(m.witness)) { console.error('WITNESS VERIFY FAILED'); process.exit(1); }
+            // Also re-verify the cosigned entry at 3-of-3 threshold
+            if (!verifyEntry(m.cosignedEntry, { minSignatures: 3 })) {
+              console.error('3-OF-3 THRESHOLD FAILED'); process.exit(1);
+            }
+            console.log('Multi-signer witness + 3-of-3 threshold verify OK:', m.witness.contentHash);
+          "
+
+      - name: Upload witness as CI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rag-multisig-attestation-witness
+          path: bench-witness/rag-multisig-attestation-*.json
+
   rag-trend-visualization:
     # ADR-121 Phase 23 — Trend visualization + drift detection.
     # Catches "death by a thousand cuts" — gradual cumulative drift

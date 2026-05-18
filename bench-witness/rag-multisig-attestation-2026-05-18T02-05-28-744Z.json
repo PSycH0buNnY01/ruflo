@@ -1,0 +1,117 @@
+{
+  "summary": {
+    "primarySignerLabel": "benchmark-runner",
+    "cosignerCount": 2,
+    "totalSigners": 3,
+    "thresholdResults": {
+      "1-of-3 (default backward-compat)": true,
+      "2-of-3": true,
+      "3-of-3 (full M-of-N)": true,
+      "4-of-3 (impossible — should fail)": false
+    },
+    "perCosignature": [
+      {
+        "label": "third-party-verifier",
+        "publicKey": "302a300506032b6570032100...",
+        "verifies": true
+      },
+      {
+        "label": "release-auditor",
+        "publicKey": "302a300506032b6570032100...",
+        "verifies": true
+      }
+    ],
+    "contentHashUnchanged": true,
+    "primarySignatureUnchanged": true
+  },
+  "cosignedEntry": {
+    "benchmark": "rag-multisig-attestation",
+    "timestamp": "2026-05-18T02:05:28.724Z",
+    "commit": "3e70bd282f9d3737089fb7ee25b8abbbab7ce95a",
+    "model": "attestation-pattern",
+    "corpus": {
+      "id": "f385f7749e6bab7ecc79f3192169910a6711486a1df9ab62f12327a96a50ad62",
+      "size": 1
+    },
+    "queries": {
+      "id": "f385f7749e6bab7ecc79f3192169910a6711486a1df9ab62f12327a96a50ad62",
+      "count": 1
+    },
+    "results": {
+      "__chain": {
+        "prevContentHash": "7b4ed25b40887294cca7850018af581f87f73ee27cc452ae698aab0d90fcda3d",
+        "sequence": 11
+      },
+      "metric": "multisig-attestation-demo",
+      "threshold": 3,
+      "signers": [
+        "benchmark-runner",
+        "third-party-verifier",
+        "release-auditor"
+      ]
+    },
+    "contentHash": "91144217901730976cc88bf94bfd6ff575a678da8482b9abde816d5cf7428550",
+    "signature": "ef86f9b6bc6e2168e7e7fe01ed5c9c6bb4fd1d4187cbbde101d028515e90867dc8dba9ddb152d1515227d4a4f2f63698bcfae8b20650b3420d1544749fdbc106",
+    "publicKey": "302a300506032b6570032100fae72f5bcf77f2a44e496c4090314a7634583e4103bf5de672acc9e3b1cc08b8",
+    "signatureAlgorithm": "ed25519",
+    "prevContentHash": "7b4ed25b40887294cca7850018af581f87f73ee27cc452ae698aab0d90fcda3d",
+    "sequence": 11,
+    "cosignatures": [
+      {
+        "signature": "843d03daebf4569180269049eb180eb8b7abc182e7f847d9c78f2b064e3a305429186e1d161e3591809bcf0e61b327b479a1150e8dd263838d0d1f0f44160907",
+        "publicKey": "302a300506032b657003210048c7d83e26bbcf94921dbff470474da14dc27411ee4359d658431eab242eebdb",
+        "signedAt": "2026-05-18T02:05:28.742Z",
+        "signerLabel": "third-party-verifier"
+      },
+      {
+        "signature": "84a7f3b301445488b151a3d4fe48f5c709c9bab23d1e7b9127b8af9407bb68760e5bdebe8f30a80b467b13688886551b203d3584072619a53912b0927864d308",
+        "publicKey": "302a300506032b65700321003c1aecdb38013115ec674e937b163bb4339752c435988d02d1bb4922e850cc19",
+        "signedAt": "2026-05-18T02:05:28.743Z",
+        "signerLabel": "release-auditor"
+      }
+    ]
+  },
+  "witness": {
+    "benchmark": "rag-multisig-attestation",
+    "timestamp": "2026-05-18T02:05:28.744Z",
+    "commit": "3e70bd282f9d3737089fb7ee25b8abbbab7ce95a",
+    "model": "attestation-pattern",
+    "corpus": {
+      "id": "f385f7749e6bab7ecc79f3192169910a6711486a1df9ab62f12327a96a50ad62",
+      "size": 1
+    },
+    "queries": {
+      "id": "f385f7749e6bab7ecc79f3192169910a6711486a1df9ab62f12327a96a50ad62",
+      "count": 1
+    },
+    "results": {
+      "primarySignerLabel": "benchmark-runner",
+      "cosignerCount": 2,
+      "totalSigners": 3,
+      "thresholdResults": {
+        "1-of-3 (default backward-compat)": true,
+        "2-of-3": true,
+        "3-of-3 (full M-of-N)": true,
+        "4-of-3 (impossible — should fail)": false
+      },
+      "perCosignature": [
+        {
+          "label": "third-party-verifier",
+          "publicKey": "302a300506032b6570032100...",
+          "verifies": true
+        },
+        {
+          "label": "release-auditor",
+          "publicKey": "302a300506032b6570032100...",
+          "verifies": true
+        }
+      ],
+      "contentHashUnchanged": true,
+      "primarySignatureUnchanged": true
+    },
+    "contentHash": "421b5a6bf6f8fc42a393a30693d296cff8f47c9d67e3004d57459f8b79c99ae3",
+    "signature": "cfad91dcbd828584aa0f14d3fcab339bde263b9ef73b8ee578ddf2e03e7c15c1a7289a1728665a37c92e5c40649f6241936f1fd9c2458c262bab608caa96b403",
+    "publicKey": "302a300506032b6570032100f345a70bdbfb47fb4308d5134b120335d7e6bc430fca1dcadf259df7b6e008f9",
+    "signatureAlgorithm": "ed25519"
+  }
+}

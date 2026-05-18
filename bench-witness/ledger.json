@@ -56,8 +56,8 @@
         }
       },
       "contentHash": "8958ef94a2a84be6202f808915a1a00bbd8ec245fc49010909df6f67fe41733a",
-      "signature": "0da3c1d8fe1d26a154d6968fe5553b9bf9bc3e491440617fdaabe0f859a50587ba7e07404c9ca77989bf528b686081932cc337160622fb8e878a9380fbc3150c",
-      "publicKey": "302a300506032b6570032100c7ad1c50ec249b4ef0fd7cb4f2f9705842befd14a86db1fe640ab98871c103d3",
+      "signature": "1cda54570c1dc62cbb3a38bb05b3056a697f957494ce004d116fea5c458b1cef706e9eeefd39adeb540e34c18af8ab0c76d5139e9ee7be172142cf7e541ab707",
+      "publicKey": "302a300506032b6570032100652cd701dad4683475c3824e276d6d331aedb5863c044982e75ff0947983eb5e",
       "signatureAlgorithm": "ed25519",
       "prevContentHash": null,
       "sequence": 1
@@ -147,8 +147,8 @@
         }
       },
       "contentHash": "b87db0cd2cbf469265542ca659c48621cb2d81bb63a3c070029a8134cfc016a5",
-      "signature": "e725f1542cd0e91166f0a669112bf06137b87e6e8e180a65a9a8c8a6e87af2b1a3e0288951cf9522e2f7fbfd5f6eec889e0af81566f32078939fbaff9fe76707",
-      "publicKey": "302a300506032b6570032100c7ad1c50ec249b4ef0fd7cb4f2f9705842befd14a86db1fe640ab98871c103d3",
+      "signature": "1f63117fbd3900e33e9614c9d416cc2bdd4731a555648826f9b406f7d302722f9e4812ab6acdccba64da14b94aa0af817aee4420e4b6d00b53fcb9faf557d10a",
+      "publicKey": "302a300506032b6570032100652cd701dad4683475c3824e276d6d331aedb5863c044982e75ff0947983eb5e",
       "signatureAlgorithm": "ed25519",
       "prevContentHash": "8958ef94a2a84be6202f808915a1a00bbd8ec245fc49010909df6f67fe41733a",
       "sequence": 2
@@ -226,8 +226,8 @@
         }
       },
       "contentHash": "3e2009dbff5f0a5bd8d0e3139f6cd92f612ec4f23b201572d39ad51704822bde",
-      "signature": "cb4272e5297ab6671d1b93c01e3756eaa2830d54772e19e57d3d3705167c1880b1c8e7e4ae541d34353c823549186b19fd388388078c247739f5f6bf468c5b00",
-      "publicKey": "302a300506032b6570032100c7ad1c50ec249b4ef0fd7cb4f2f9705842befd14a86db1fe640ab98871c103d3",
+      "signature": "31e40641df3fcdc01bbd24946cb749e0d3202d933b1af5c2f7dcd5abd863ffd62b0cfe8f1d9a78ae4c1abf9a327870d4a9bba7a42bc53a01d9a6ed7e9505520e",
+      "publicKey": "302a300506032b6570032100652cd701dad4683475c3824e276d6d331aedb5863c044982e75ff0947983eb5e",
       "signatureAlgorithm": "ed25519",
       "prevContentHash": "b87db0cd2cbf469265542ca659c48621cb2d81bb63a3c070029a8134cfc016a5",
       "sequence": 3
@@ -299,8 +299,8 @@
         }
       },
       "contentHash": "e96537707e609ca410c2c3d71543633edbcf8d90d782e34c81f007cbd1013873",
-      "signature": "61ea286093d4d4688d66dae94d008b4eb945beaa9bfab4c7f439b5a649b3ea63a6f7746362a44ce8c1d5505337d5a2b77789e57e4772118a4e41ce3c8c188d02",
-      "publicKey": "302a300506032b6570032100c7ad1c50ec249b4ef0fd7cb4f2f9705842befd14a86db1fe640ab98871c103d3",
+      "signature": "73838d29b131fe1d33a26b8bebd0c0f7c8330b0720841ebce207c73da413721acbdb5e81759487d38757db5fa19c15f10496f03ba41dc5fc68c1495292ec7504",
+      "publicKey": "302a300506032b6570032100652cd701dad4683475c3824e276d6d331aedb5863c044982e75ff0947983eb5e",
       "signatureAlgorithm": "ed25519",
       "prevContentHash": "3e2009dbff5f0a5bd8d0e3139f6cd92f612ec4f23b201572d39ad51704822bde",
       "sequence": 4
@@ -339,8 +339,8 @@
         }
       },
       "contentHash": "9c9bb28beee9847df12c93646bdadb8a99906dbabc8c325aa9b79c4ccf5bb075",
-      "signature": "19c6895c816639fbca99914cec90ea51c63d354624e1fa3bffb62bc6c204430b31c5015964ca3042a49c0edee0cb38f3a210119db076a0b3aaa8ccf8d7fe2702",
-      "publicKey": "302a300506032b6570032100c7ad1c50ec249b4ef0fd7cb4f2f9705842befd14a86db1fe640ab98871c103d3",
+      "signature": "e2aa6ff7cd5afccf50bdb39b4eb1c3c295e9a9417f3bad2b34e31b84728575613d506997560bdfef32be9ae8ab5beb3e210acabadbbaee0007c80d7cf4127507",
+      "publicKey": "302a300506032b6570032100652cd701dad4683475c3824e276d6d331aedb5863c044982e75ff0947983eb5e",
       "signatureAlgorithm": "ed25519",
       "prevContentHash": "e96537707e609ca410c2c3d71543633edbcf8d90d782e34c81f007cbd1013873",
       "sequence": 5
@@ -389,8 +389,8 @@
         }
       },
       "contentHash": "c1699495a56655bd01175137c5ef65af576085ecad8da4b63e1f32e42d2a0088",
-      "signature": "78649a076f423aa4c3184f10ea54418665c8397d80d4d3791aa96f8b7be68b28d3e6f970b8f70098a04229eb5ffa94f85920ef1034cad02a472936bae3d70e0f",
-      "publicKey": "302a300506032b6570032100c7ad1c50ec249b4ef0fd7cb4f2f9705842befd14a86db1fe640ab98871c103d3",
+      "signature": "c31ccf098fd653ce77adec9efee6de652e92bd115be1e7315ef6d0b96937234c7b02c3747da28bd268d30f2c388b9a413a7ed6e8bfd99fb80b19c9a7333abc0f",
+      "publicKey": "302a300506032b6570032100652cd701dad4683475c3824e276d6d331aedb5863c044982e75ff0947983eb5e",
       "signatureAlgorithm": "ed25519",
       "prevContentHash": "9c9bb28beee9847df12c93646bdadb8a99906dbabc8c325aa9b79c4ccf5bb075",
       "sequence": 6
@@ -479,8 +479,8 @@
         }
       },
       "contentHash": "9ae4548b749147abce9839b22d0ea8bfb99c01aa3b32d0d563046d975c9a707a",
-      "signature": "581468332bfcbd6b3254a2d070633fe1a86bff522689299da4e3622f9c9cff49a224240a99bd8447b72bf77958bbb36f334d0ca302a8d6c04ddc7e8635d57405",
-      "publicKey": "302a300506032b6570032100c7ad1c50ec249b4ef0fd7cb4f2f9705842befd14a86db1fe640ab98871c103d3",
+      "signature": "240afb2a81005570f47f3dc14cae018698c918398bb18da914471b4f735dfb97c39ff8da47a611f8398af767178e3a4a342e3193845c1329914ba87f252c4d00",
+      "publicKey": "302a300506032b6570032100652cd701dad4683475c3824e276d6d331aedb5863c044982e75ff0947983eb5e",
       "signatureAlgorithm": "ed25519",
       "prevContentHash": "c1699495a56655bd01175137c5ef65af576085ecad8da4b63e1f32e42d2a0088",
       "sequence": 7
@@ -529,8 +529,8 @@
         }
       },
       "contentHash": "c750eb49e9cef227d6a996a9c9aeee9ac3028e7b85b9a6d75b0c6faeab2c978d",
-      "signature": "af9ca4275df993a636142873a93ba5af1cd36676f267b90f8542d48365c3331cd148428a073889bf53531bd8c711cb49dfc54eb0193d1d1e17aefdc79c187c00",
-      "publicKey": "302a300506032b6570032100c7ad1c50ec249b4ef0fd7cb4f2f9705842befd14a86db1fe640ab98871c103d3",
+      "signature": "929947917fbf4096dfad9df40053b3e93a8bf11c559ec8fe5474aa97bd987d91f37869e88923ad9759461afdd3372ff76f6499b2815ced940197c528102f2e0f",
+      "publicKey": "302a300506032b6570032100652cd701dad4683475c3824e276d6d331aedb5863c044982e75ff0947983eb5e",
       "signatureAlgorithm": "ed25519",
       "prevContentHash": "9ae4548b749147abce9839b22d0ea8bfb99c01aa3b32d0d563046d975c9a707a",
       "sequence": 8
@@ -629,8 +629,8 @@
         }
       },
       "contentHash": "574a9d6796c35aed142dafa9994ad74c4f3c3e87407b3ccab6a874537a512d2b",
-      "signature": "9d119dfc6bec4d084dccb38229fc48c4e58df350a758489a29567776fef9bdd883328d76c3d8f99ff8060b1185ea18e9ac22d46a44be284d11e7501a4157d309",
-      "publicKey": "302a300506032b6570032100c7ad1c50ec249b4ef0fd7cb4f2f9705842befd14a86db1fe640ab98871c103d3",
+      "signature": "beca9ccb7f72a5af4c06064553551bbedeff88f0035f0f5fc8f12e276c48dd484b78d8dd47abaf150f21f64340e22fe209c04e28970606b0a7007de74aec2404",
+      "publicKey": "302a300506032b6570032100652cd701dad4683475c3824e276d6d331aedb5863c044982e75ff0947983eb5e",
       "signatureAlgorithm": "ed25519",
       "prevContentHash": "c750eb49e9cef227d6a996a9c9aeee9ac3028e7b85b9a6d75b0c6faeab2c978d",
       "sequence": 9
@@ -772,11 +772,65 @@
         }
       },
       "contentHash": "7b4ed25b40887294cca7850018af581f87f73ee27cc452ae698aab0d90fcda3d",
-      "signature": "9750d402a5195dca407e0a6b9d19d9bfd8af911be9bdf2333e412524f5fd786b5e1af2122e66e33dc388224f14ce2f7cdaf3b0261b1f239850380af426f53508",
-      "publicKey": "302a300506032b6570032100c7ad1c50ec249b4ef0fd7cb4f2f9705842befd14a86db1fe640ab98871c103d3",
+      "signature": "c168bed6a586444b8e3c724bcde95d03d01759f8fbd97e8894296526a8cf8ba18e9cbe50a604f33552157e5b3ff41a145a3e30e99708b6b2cdde60f03a00c70a",
+      "publicKey": "302a300506032b6570032100652cd701dad4683475c3824e276d6d331aedb5863c044982e75ff0947983eb5e",
       "signatureAlgorithm": "ed25519",
       "prevContentHash": "574a9d6796c35aed142dafa9994ad74c4f3c3e87407b3ccab6a874537a512d2b",
       "sequence": 10
+    },
+    {
+      "benchmark": "rag-multisig-attestation",
+      "timestamp": "2026-05-18T02:05:28.744Z",
+      "commit": "3e70bd282f9d3737089fb7ee25b8abbbab7ce95a",
+      "model": "attestation-pattern",
+      "corpus": {
+        "id": "f385f7749e6bab7ecc79f3192169910a6711486a1df9ab62f12327a96a50ad62",
+        "size": 1
+      },
+      "queries": {
+        "id": "f385f7749e6bab7ecc79f3192169910a6711486a1df9ab62f12327a96a50ad62",
+        "count": 1
+      },
+      "results": {
+        "__chain": {
+          "prevContentHash": "7b4ed25b40887294cca7850018af581f87f73ee27cc452ae698aab0d90fcda3d",
+          "sequence": 11
+        },
+        "originalContentHash": "421b5a6bf6f8fc42a393a30693d296cff8f47c9d67e3004d57459f8b79c99ae3",
+        "originalSignature": "cfad91dcbd828584aa0f14d3fcab339bde263b9ef73b8ee578ddf2e03e7c15c1a7289a1728665a37c92e5c40649f6241936f1fd9c2458c262bab608caa96b403",
+        "originalPublicKey": "302a300506032b6570032100f345a70bdbfb47fb4308d5134b120335d7e6bc430fca1dcadf259df7b6e008f9",
+        "results": {
+          "primarySignerLabel": "benchmark-runner",
+          "cosignerCount": 2,
+          "totalSigners": 3,
+          "thresholdResults": {
+            "1-of-3 (default backward-compat)": true,
+            "2-of-3": true,
+            "3-of-3 (full M-of-N)": true,
+            "4-of-3 (impossible — should fail)": false
+          },
+          "perCosignature": [
+            {
+              "label": "third-party-verifier",
+              "publicKey": "302a300506032b6570032100...",
+              "verifies": true
+            },
+            {
+              "label": "release-auditor",
+              "publicKey": "302a300506032b6570032100...",
+              "verifies": true
+            }
+          ],
+          "contentHashUnchanged": true,
+          "primarySignatureUnchanged": true
+        }
+      },
+      "contentHash": "879105f9769367465e2d4b241aaad38f7462a3a264db43cfaf1d49651de727af",
+      "signature": "1674a168971525e9c24d1ea3cfed71d4378962a1e2b6486353b6b7eddd7f785b59d1200472165c9c9c6b72e6082e5419abcbe14a8799315768491516eb13d00c",
+      "publicKey": "302a300506032b6570032100652cd701dad4683475c3824e276d6d331aedb5863c044982e75ff0947983eb5e",
+      "signatureAlgorithm": "ed25519",
+      "prevContentHash": "7b4ed25b40887294cca7850018af581f87f73ee27cc452ae698aab0d90fcda3d",
+      "sequence": 11
     }
   ]
 }

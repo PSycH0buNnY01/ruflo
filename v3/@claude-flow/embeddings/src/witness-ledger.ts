@@ -25,7 +25,7 @@
  */
 
 import { canonicalHash, witness, verify, type BenchmarkWitnessInput, type WitnessedManifest } from './witness.js';
-import { generateKeyPairSync, type KeyObject } from 'node:crypto';
+import { generateKeyPairSync, sign as cryptoSign, verify as cryptoVerify, createPublicKey, type KeyObject } from 'node:crypto';
 
 /**
  * A chained ledger entry — a regular WitnessedManifest plus the
@@ -34,11 +34,38 @@ import { generateKeyPairSync, type KeyObject } from 'node:crypto';
  * Genesis entry: prevContentHash = null.
  * Subsequent entries: prevContentHash = previous entry's contentHash.
  */
+/**
+ * Phase 24 — independent third-party signature attached to an existing
+ * entry's contentHash. Co-signers don't change the hash; they just
+ * attest "I observed this entry and verified its primary signature."
+ *
+ * Threshold verification (`verifyEntry(entry, { minSignatures: N })`)
+ * counts the PRIMARY signature plus every valid cosignature; passes
+ * when N or more are valid. M-of-N adversarial benchmarking just sets
+ * the threshold to M.
+ */
+export interface CosignatureRecord {
+  /** Ed25519 signature over the entry's contentHash (hex). */
+  readonly signature: string;
+  /** SPKI-DER hex of the co-signer's public key. */
+  readonly publicKey: string;
+  /** ISO-8601 timestamp of when the co-signature was attached. */
+  readonly signedAt: string;
+  /** Optional human-readable label (e.g. "third-party verifier"). */
+  readonly signerLabel?: string;
+}
+
 export interface LedgerEntry extends WitnessedManifest {
   /** sha256-hex of the previous entry's contentHash, or null for genesis. */
   readonly prevContentHash: string | null;
   /** 1-based position in the chain. */
   readonly sequence: number;
+  /**
+   * Phase 24 — optional additional signatures from third-party verifiers.
+   * Backward-compatible: existing single-signer entries omit this field
+   * and verify at minSignatures=1 (counting just the primary signature).
+   */
+  readonly cosignatures?: ReadonlyArray<CosignatureRecord>;
 }
 
 export interface BenchmarkLedger {
@@ -127,12 +154,17 @@ export function appendToLedger(
  * Verify a single ledger entry: checks its own signature via the
  * base witness verifier (which validates the contentHash + signature
  * + public-key pair).
+ *
+ * Phase 24 — pass `{ minSignatures: N }` to require N or more total
+ * valid signatures (primary + cosignatures). Default 1 — backward-
+ * compatible with single-signer entries.
  */
-export function verifyEntry(entry: LedgerEntry): boolean {
-  // Reuse the base verifier — it recomputes the hash over the
-  // entry's results (which include the __chain fields), so the
-  // chain is implicitly checked when verifying signature integrity.
-  return verify({
+export function verifyEntry(entry: LedgerEntry, options: { minSignatures?: number } = {}): boolean {
+  const minSignatures = options.minSignatures ?? 1;
+  if (minSignatures < 1) return true; // 0-threshold trivially passes
+
+  // Primary signature check via the base witness verifier.
+  const primaryValid = verify({
     benchmark: entry.benchmark,
     timestamp: entry.timestamp,
     commit: entry.commit,
@@ -145,6 +177,61 @@ export function verifyEntry(entry: LedgerEntry): boolean {
     publicKey: entry.publicKey,
     signatureAlgorithm: entry.signatureAlgorithm,
   });
+  let validCount = primaryValid ? 1 : 0;
+
+  // Co-signature checks (Phase 24). Each cosignature is an
+  // independent Ed25519 over the entry's contentHash.
+  if (entry.cosignatures && entry.cosignatures.length > 0) {
+    for (const cs of entry.cosignatures) {
+      if (verifyCosignatureAgainst(entry.contentHash, cs)) {
+        validCount++;
+      }
+    }
+  }
+
+  return validCount >= minSignatures;
+}
+
+/**
+ * Add a third-party co-signature to an existing ledger entry. Returns
+ * a new entry (the original is not mutated). The new co-signer signs
+ * the entry's existing contentHash — does NOT change the hash itself,
+ * preserving the chain integrity.
+ */
+export function coSign(
+  entry: LedgerEntry,
+  keypair: { privateKey: KeyObject; publicKey: KeyObject },
+  options: { signerLabel?: string; signedAt?: string } = {},
+): LedgerEntry {
+  const signature = cryptoSign(null, Buffer.from(entry.contentHash, 'utf8'), keypair.privateKey).toString('hex');
+  const publicKey = keypair.publicKey.export({ type: 'spki', format: 'der' }).toString('hex');
+
+  const record: CosignatureRecord = {
+    signature,
+    publicKey,
+    signedAt: options.signedAt ?? new Date().toISOString(),
+    ...(options.signerLabel ? { signerLabel: options.signerLabel } : {}),
+  };
+
+  return {
+    ...entry,
+    cosignatures: [...(entry.cosignatures ?? []), record],
+  };
+}
+
+/**
+ * Verify a single co-signature against the canonical contentHash.
+ * Exposed for tooling that wants to per-signer validate (e.g.
+ * dashboards that mark each co-signer green/red individually).
+ */
+export function verifyCosignatureAgainst(contentHash: string, cs: CosignatureRecord): boolean {
+  try {
+    const pubKeyDer = Buffer.from(cs.publicKey, 'hex');
+    const pubKey = createPublicKey({ key: pubKeyDer, format: 'der', type: 'spki' });
+    return cryptoVerify(null, Buffer.from(contentHash, 'utf8'), pubKey, Buffer.from(cs.signature, 'hex'));
+  } catch {
+    return false;
+  }
 }
 
 export interface ChainVerifyResult {
@@ -170,7 +257,11 @@ export interface ChainVerifyResult {
  * N breaks signatures from N onward; a missing entry N breaks
  * sequence integrity).
  */
-export function verifyLedger(ledger: BenchmarkLedger): ChainVerifyResult {
+export function verifyLedger(
+  ledger: BenchmarkLedger,
+  options: { minSignatures?: number } = {},
+): ChainVerifyResult {
+  const minSignatures = options.minSignatures ?? 1;
   if (ledger.version !== 1) {
     return {
       valid: false,
@@ -200,13 +291,14 @@ export function verifyLedger(ledger: BenchmarkLedger): ChainVerifyResult {
         reason: `entry ${i} prevContentHash ${e.prevContentHash} != previous contentHash ${prevHash}`,
       };
     }
-    // Signature check.
-    if (!verifyEntry(e)) {
+    // Signature check (Phase 24: threshold-aware).
+    if (!verifyEntry(e, { minSignatures })) {
+      const cosigCount = e.cosignatures?.length ?? 0;
       return {
         valid: false,
         entryCount: ledger.entries.length,
         firstFailureAt: i,
-        reason: `entry ${i} signature verification failed`,
+        reason: `entry ${i} signature threshold not met (minSignatures=${minSignatures}; entry has 1 primary + ${cosigCount} cosignatures, but not enough verified)`,
       };
     }
     prevHash = e.contentHash;
