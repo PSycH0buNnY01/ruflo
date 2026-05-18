@@ -201,6 +201,21 @@ export {
   type CompoundIntentTrace,
 } from './compound-retrieval.js';
 
+// ADR-121 Phase 18 — Chained witness ledger.
+// Builds a hash chain over Phase 15 witness manifests so the FULL
+// HISTORY of benchmark runs becomes tamper-evident. Editing any
+// historical entry breaks every subsequent signature. Anyone can
+// replay the ledger and detect retroactive edits.
+export {
+  appendToLedger,
+  verifyEntry,
+  verifyLedger,
+  generateLedgerKeypair,
+  type BenchmarkLedger,
+  type LedgerEntry,
+  type ChainVerifyResult,
+} from './witness-ledger.js';
+
 // ADR-121 Phase 15 — Benchmark witness manifest (ed25519-signed).
 // Every benchmark run emits a tamper-evident JSON manifest with the
 // corpus/query/model identity + results + signature. Anyone can

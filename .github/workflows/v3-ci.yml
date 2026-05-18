@@ -479,6 +479,79 @@ jobs:
         shell: bash
         run: node scripts/smoke-embeddings-diskann.mjs
 
+  rag-witness-ledger:
+    # ADR-121 Phase 18 — Chained witness ledger.
+    # Each benchmark run produces a per-run signed manifest (Phase 15).
+    # This job builds a hash-chain over all of them so editing any
+    # historical entry breaks every subsequent signature. Independent
+    # process verifies the full chain; result uploaded as a CI
+    # artifact for anyone to download and re-verify.
+    # Pass criterion: verifyLedger().valid === true on every commit.
+    name: rag chained benchmark ledger (#2036, ADR-121 Phase 18)
+    runs-on: ubuntu-latest
+    # Run AFTER the benchmarks that produce the per-run manifests so
+    # we always chain over the freshest data. (The chain itself doesn't
+    # need those jobs to pass — broken benchmark inputs still produce
+    # a valid chain; the chain attests "we observed these numbers",
+    # not "these numbers are good".)
+    needs: [rag-real-text-benchmark, rag-adaptive-router-benchmark, rag-hybrid-benchmark]
+    if: always()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build embeddings
+        run: |
+          cd v3/@claude-flow/embeddings
+          npm install --no-audit --no-fund --legacy-peer-deps
+          npx tsc -p tsconfig.json
+
+      - name: Download all per-run witness artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: bench-witness-artifacts
+          merge-multiple: true
+
+      - name: Stage manifests into bench-witness/
+        shell: bash
+        run: |
+          mkdir -p bench-witness
+          # Pull every json from the downloaded artifact tree
+          # (each prior job uploaded to its own artifact name).
+          find bench-witness-artifacts -name '*.json' -exec cp {} bench-witness/ \;
+          ls -la bench-witness/
+
+      - name: Build chained ledger
+        shell: bash
+        run: node scripts/build-benchmark-ledger.mjs
+
+      - name: Verify ledger (independent process)
+        shell: bash
+        run: |
+          node --input-type=module -e "
+            import fs from 'node:fs';
+            const { verifyLedger } = await import('./v3/@claude-flow/embeddings/dist/witness-ledger.js');
+            const ledger = JSON.parse(fs.readFileSync('bench-witness/ledger.json', 'utf8'));
+            const r = verifyLedger(ledger);
+            if (!r.valid) {
+              console.error('LEDGER VERIFICATION FAILED:', r);
+              process.exit(1);
+            }
+            console.log('Ledger verifies independently:', r.entryCount, 'entries chained');
+            console.log('Chain head contentHash:', ledger.entries.at(-1).contentHash);
+          "
+
+      - name: Upload chained ledger as CI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rag-benchmark-ledger
+          path: bench-witness/ledger.json
+
   rag-hybrid-benchmark:
     # ADR-121 Phase 17 — Hybrid sparse+dense retrieval (BM25 + RRF).
     # Runs on real Xenova ONNX embeddings over a 24-doc corpus mixing

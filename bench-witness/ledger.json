@@ -1,0 +1,236 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "benchmark": "rag-real-text",
+      "timestamp": "2026-05-18T00:27:56.447Z",
+      "commit": "91c8b62b5ebd50208f338542a2b4335491617ebc",
+      "model": "Xenova/all-MiniLM-L6-v2",
+      "corpus": {
+        "id": "f58c57185f8051db859fb9edd6b82b5c94cdc7337c6eef4a2cb9aa79244c605e",
+        "size": 30
+      },
+      "queries": {
+        "id": "657259ac830bf5b3c51b86fe7da350fd6ad95e219a25df3ae40a26c760d8c148",
+        "count": 6
+      },
+      "results": {
+        "__chain": {
+          "prevContentHash": null,
+          "sequence": 1
+        },
+        "originalContentHash": "1568d5fea102b51ff1a51c04b46f4f3f59725198989199ee2a41faaab004e1ec",
+        "originalSignature": "49700a203633e8f250663f3767c0df61ea42e7de1184a6d745503aec227307c42784c7edf302de206f2b3477d9822802978f3070a67ce7bf3125af87b5a47400",
+        "originalPublicKey": "302a300506032b65700321004a3998317807bf2c1c4740533127651ccc0cb3c67ad2f85c45188c76a956c1cd",
+        "results": {
+          "plain": {
+            "recallAt5": 0.8999999999999999,
+            "mrr": 1,
+            "ndcgAt5": 0.9255244116680239,
+            "meanLatencyMs": 1.1547083333333334
+          },
+          "mmr": {
+            "recallAt5": 0.3666666666666667,
+            "mrr": 1,
+            "ndcgAt5": 0.4849645485171013,
+            "meanLatencyMs": 1.4214516666666668
+          },
+          "rrf": {
+            "recallAt5": 0.9333333333333332,
+            "mrr": 1,
+            "ndcgAt5": 0.9562649741625527,
+            "meanLatencyMs": 2.8675763333333335
+          },
+          "hyde": {
+            "recallAt5": 0.9666666666666667,
+            "mrr": 1,
+            "ndcgAt5": 0.9781324870812763,
+            "meanLatencyMs": 4.961305333333333
+          },
+          "compound": {
+            "recallAt5": 0.9666666666666667,
+            "mrr": 1,
+            "ndcgAt5": 0.9781324870812763,
+            "meanLatencyMs": 7.618409833333332
+          }
+        }
+      },
+      "contentHash": "8958ef94a2a84be6202f808915a1a00bbd8ec245fc49010909df6f67fe41733a",
+      "signature": "04900d8fbb33d803c721c5344b6b535643b9ea8a8cc73c851a07f891843df515c7fa35bc2bf3386fc5d225400662bdfd804f83d55be12b7eff8840f88cef2b06",
+      "publicKey": "302a300506032b6570032100e8f536147fd2f075c34b30b447d07a0b75e03a88e491f842491b7a222f11a5cb",
+      "signatureAlgorithm": "ed25519",
+      "prevContentHash": null,
+      "sequence": 1
+    },
+    {
+      "benchmark": "rag-adaptive-router",
+      "timestamp": "2026-05-18T00:36:12.259Z",
+      "commit": "9567c475698e134fc5c478d5847f215b91800126",
+      "model": "algorithmic-test-fixtures-dim16",
+      "corpus": {
+        "id": "d7010b8a927430668fc45dd30807e907f7e61ab97b968db82bab94e736f96906",
+        "size": 5
+      },
+      "queries": {
+        "id": "1b762a5ad33b631f1de4943b5130e92ae0e73279a3f51719ffc8c3413cd616a3",
+        "count": 5
+      },
+      "results": {
+        "__chain": {
+          "prevContentHash": "8958ef94a2a84be6202f808915a1a00bbd8ec245fc49010909df6f67fe41733a",
+          "sequence": 2
+        },
+        "originalContentHash": "ddc6d0a4c03de22c6cc508eaa565c955398f967cc2d2b3ecc060dd105801b5dd",
+        "originalSignature": "914252456594e3b8d430635c7d7f66cead1223e394bd59c9beb60c57b6b1dbf1cfe471c613bcdad69a5f3f52cabf5a3ca20345e1ff8c88f4a31e6df2f25e0008",
+        "originalPublicKey": "302a300506032b657003210000eee835bda3ae93df6e7b6ed0ad91e1f26077ff81295fee07bffcf24973f7f1",
+        "results": {
+          "totalTopologies": 5,
+          "correctPredictions": 5,
+          "accuracy": 1,
+          "perTopology": [
+            {
+              "topology": "easy",
+              "expected": "plain",
+              "actual": "plain",
+              "match": true,
+              "features": {
+                "duplicateDensity": 0,
+                "queryIntentCohesion": 0.9988,
+                "qaSpaceGap": 0.0009
+              }
+            },
+            {
+              "topology": "duplicate-heavy",
+              "expected": "mmr",
+              "actual": "mmr",
+              "match": true,
+              "features": {
+                "duplicateDensity": 0.9996,
+                "queryIntentCohesion": 0.9995,
+                "qaSpaceGap": 0.0014
+              }
+            },
+            {
+              "topology": "multi-intent",
+              "expected": "rrf",
+              "actual": "rrf",
+              "match": true,
+              "features": {
+                "duplicateDensity": 0.4377,
+                "queryIntentCohesion": 0,
+                "qaSpaceGap": 0
+              }
+            },
+            {
+              "topology": "q-a-gap",
+              "expected": "hyde",
+              "actual": "hyde",
+              "match": true,
+              "features": {
+                "duplicateDensity": 0,
+                "queryIntentCohesion": 0.9995,
+                "qaSpaceGap": 1
+              }
+            },
+            {
+              "topology": "compound-trigger",
+              "expected": "compound",
+              "actual": "compound",
+              "match": true,
+              "features": {
+                "duplicateDensity": 0.9999,
+                "queryIntentCohesion": 0,
+                "qaSpaceGap": 1
+              }
+            }
+          ]
+        }
+      },
+      "contentHash": "b87db0cd2cbf469265542ca659c48621cb2d81bb63a3c070029a8134cfc016a5",
+      "signature": "97631ba1d8e4a4a32a03628ecec4c6d268bf2abffc805977270ff667798b449cc4bdd65a7e2f41b27372d4d4578478c66b7486986914f67bcc660b0bc5e55c0e",
+      "publicKey": "302a300506032b6570032100e8f536147fd2f075c34b30b447d07a0b75e03a88e491f842491b7a222f11a5cb",
+      "signatureAlgorithm": "ed25519",
+      "prevContentHash": "8958ef94a2a84be6202f808915a1a00bbd8ec245fc49010909df6f67fe41733a",
+      "sequence": 2
+    },
+    {
+      "benchmark": "rag-hybrid-sparse-dense",
+      "timestamp": "2026-05-18T00:51:54.255Z",
+      "commit": "cd57e650a4c504dcfd78c3f496056c84b39da1c0",
+      "model": "Xenova/all-MiniLM-L6-v2",
+      "corpus": {
+        "id": "df6593050ffa5da161c66752b77d481c55fc845d60324de3c7d85ba5721dbf6b",
+        "size": 24
+      },
+      "queries": {
+        "id": "058225dd5e546a33b39c06c5d8a3f0e8cf83743e1995288acdce0dadfcb91563",
+        "count": 8
+      },
+      "results": {
+        "__chain": {
+          "prevContentHash": "b87db0cd2cbf469265542ca659c48621cb2d81bb63a3c070029a8134cfc016a5",
+          "sequence": 3
+        },
+        "originalContentHash": "a932accff225f10d02d148ed83674e24c46c9e21f2b1b318d83aff98bfedb9b4",
+        "originalSignature": "a5e5a78da13b1e41d1ac4a59792e7a7b677d4c4cbb992d0a1198663f5ae48fa12892085921bbeafd26b1aadf98045525919687c791caa92ed98424dd9e928607",
+        "originalPublicKey": "302a300506032b6570032100c0636ade067c6ff8af344cf19427a791ace1a847592d6567c86497e396e39a6e",
+        "results": {
+          "dense": {
+            "overall": {
+              "recallAt5": 0.9375,
+              "mrr": 0.9166666666666667,
+              "ndcgAt5": 0.9265707789549604,
+              "meanLatencyMs": 1.47970325
+            },
+            "generic": {
+              "recallAt5": 0.875,
+              "ndcgAt5": 0.8531415579099209
+            },
+            "rare": {
+              "recallAt5": 1,
+              "ndcgAt5": 1
+            }
+          },
+          "sparse": {
+            "overall": {
+              "recallAt5": 0.6458333333333333,
+              "mrr": 0.8125,
+              "ndcgAt5": 0.6881846701525612,
+              "meanLatencyMs": 0.04804150000000001
+            },
+            "generic": {
+              "recallAt5": 0.29166666666666663,
+              "ndcgAt5": 0.3763693403051225
+            },
+            "rare": {
+              "recallAt5": 1,
+              "ndcgAt5": 1
+            }
+          },
+          "hybrid": {
+            "overall": {
+              "recallAt5": 0.8333333333333334,
+              "mrr": 0.9375,
+              "ndcgAt5": 0.8674999096553356,
+              "meanLatencyMs": 1.403036625
+            },
+            "generic": {
+              "recallAt5": 0.6666666666666667,
+              "ndcgAt5": 0.7349998193106713
+            },
+            "rare": {
+              "recallAt5": 1,
+              "ndcgAt5": 1
+            }
+          }
+        }
+      },
+      "contentHash": "3e2009dbff5f0a5bd8d0e3139f6cd92f612ec4f23b201572d39ad51704822bde",
+      "signature": "be3b7619913fa4cb0dde08ae5db5ded95e29c8e677543e9d86adb4d845be465140d98532b92c100a9807095e53b6dbcb0fe625158d2bb7256e06a9c0bae9bb02",
+      "publicKey": "302a300506032b6570032100e8f536147fd2f075c34b30b447d07a0b75e03a88e491f842491b7a222f11a5cb",
+      "signatureAlgorithm": "ed25519",
+      "prevContentHash": "b87db0cd2cbf469265542ca659c48621cb2d81bb63a3c070029a8134cfc016a5",
+      "sequence": 3
+    }
+  ]
+}
