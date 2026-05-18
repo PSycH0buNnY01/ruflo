@@ -173,6 +173,21 @@ export {
   type Bm25Hit,
 } from './bm25.js';
 
+// ADR-121 Phase 20 — Lazy/short-circuit adaptive router (BEYOND SOTA).
+// Extends Phase 16's adaptive router with incremental feature
+// extraction: embeds query → checks duplicate-density → if signal
+// fires, skips variant+hypothetical embeds. Same routing decisions
+// as Phase 16 with materially lower cost on workloads where easy
+// signals fire early.
+export {
+  lazyAdaptiveRoute,
+  type LazyEmbedAdapter,
+  type LazyCandidateSource,
+  type LazyRouterInputs,
+  type LazyRouterCostReport,
+  type LazyRouterResult,
+} from './lazy-adaptive-router.js';
+
 // ADR-121 Phase 16 — Adaptive primitive selection (BEYOND SOTA).
 // Pure-function feature extractor + router that examines query/corpus
 // shape and picks the right primitive automatically — saving the

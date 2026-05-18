@@ -479,6 +479,58 @@ jobs:
         shell: bash
         run: node scripts/smoke-embeddings-diskann.mjs
 
+  rag-lazy-router:
+    # ADR-121 Phase 20 — Lazy/short-circuit adaptive router benchmark.
+    # Compares the eager (Phase 16) and lazy (Phase 20) routers on the
+    # same mixed-shape workload as the Phase 19 ablation. Pass criterion:
+    # (a) lazy never uses more embeds than eager on any query, (b) lazy
+    # saves >0 embeds on the workload (proves short-circuit fires),
+    # (c) when lazy diverges from eager it ALWAYS picks a cheaper
+    # primitive (cost/quality tradeoff bounded — never quality-cost
+    # regression). Witness-signed, re-verified in independent process,
+    # uploaded as CI artifact.
+    name: rag lazy router benchmark + witness (#2036, ADR-121 Phase 20)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build embeddings + CLI
+        run: |
+          cd v3/@claude-flow/embeddings
+          npm install --no-audit --no-fund --legacy-peer-deps
+          npx tsc -p tsconfig.json
+          cd ../cli
+          npm install --no-audit --no-fund --legacy-peer-deps
+          npx tsc --build --force tsconfig.json
+
+      - name: Run lazy router benchmark (witness-signed)
+        shell: bash
+        run: node scripts/benchmark-rag-lazy-router.mjs
+
+      - name: Verify witness manifest (independent process)
+        shell: bash
+        run: |
+          FILE=$(ls -t bench-witness/rag-lazy-router-*.json | head -1)
+          node --input-type=module -e "
+            import fs from 'node:fs';
+            const { verify } = await import('./v3/@claude-flow/embeddings/dist/witness.js');
+            const m = JSON.parse(fs.readFileSync('$FILE', 'utf8'));
+            if (!verify(m.witness)) { console.error('VERIFY FAILED'); process.exit(1); }
+            console.log('Lazy router witness verifies OK:', m.witness.contentHash);
+          "
+
+      - name: Upload witness as CI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rag-lazy-router-witness
+          path: bench-witness/rag-lazy-router-*.json
+
   rag-router-ablation:
     # ADR-121 Phase 19 — Adaptive router ablation benchmark.
     # Runs all 5 fixed primitives + adaptive on the same 7-query
@@ -544,7 +596,7 @@ jobs:
     # need those jobs to pass — broken benchmark inputs still produce
     # a valid chain; the chain attests "we observed these numbers",
     # not "these numbers are good".)
-    needs: [rag-real-text-benchmark, rag-adaptive-router-benchmark, rag-hybrid-benchmark, rag-router-ablation]
+    needs: [rag-real-text-benchmark, rag-adaptive-router-benchmark, rag-hybrid-benchmark, rag-router-ablation, rag-lazy-router]
     if: always()
     steps:
       - name: Checkout code

@@ -1,0 +1,169 @@
+{
+  "summary": {
+    "queryCount": 7,
+    "decisionMatches": 4,
+    "decisionEquivalence": false,
+    "eagerTotalEmbeds": 37,
+    "lazyTotalEmbeds": 28,
+    "embedsSaved": 9,
+    "embedsSavedPercent": 24.324324324324326,
+    "eagerMeanLatencyMs": 6.424762,
+    "lazyMeanLatencyMs": 4.098018000000001
+  },
+  "perQuery": [
+    {
+      "query": "auth (plain)",
+      "kind": "plain",
+      "eager": {
+        "primitive": "plain",
+        "embeds": 3,
+        "ms": 5.271125
+      },
+      "lazy": {
+        "primitive": "plain",
+        "embeds": 3,
+        "ms": 3.462708,
+        "skipped": []
+      },
+      "decisionMatches": true,
+      "embedsSaved": 0
+    },
+    {
+      "query": "cache info (mmr)",
+      "kind": "mmr",
+      "eager": {
+        "primitive": "plain",
+        "embeds": 7,
+        "ms": 8.837167
+      },
+      "lazy": {
+        "primitive": "plain",
+        "embeds": 7,
+        "ms": 8.776209,
+        "skipped": []
+      },
+      "decisionMatches": true,
+      "embedsSaved": 0
+    },
+    {
+      "query": "deploy+monitor (rrf)",
+      "kind": "rrf",
+      "eager": {
+        "primitive": "compound",
+        "embeds": 7,
+        "ms": 7.727833
+      },
+      "lazy": {
+        "primitive": "rrf",
+        "embeds": 4,
+        "ms": 3.940875,
+        "skipped": [
+          "hypotheticals"
+        ]
+      },
+      "decisionMatches": false,
+      "embedsSaved": 3
+    },
+    {
+      "query": "vector indexing (hyde)",
+      "kind": "hyde",
+      "eager": {
+        "primitive": "compound",
+        "embeds": 7,
+        "ms": 8.920167
+      },
+      "lazy": {
+        "primitive": "rrf",
+        "embeds": 4,
+        "ms": 3.633292,
+        "skipped": [
+          "hypotheticals"
+        ]
+      },
+      "decisionMatches": false,
+      "embedsSaved": 3
+    },
+    {
+      "query": "unified (compound)",
+      "kind": "compound",
+      "eager": {
+        "primitive": "compound",
+        "embeds": 7,
+        "ms": 8.393625
+      },
+      "lazy": {
+        "primitive": "rrf",
+        "embeds": 4,
+        "ms": 2.980917,
+        "skipped": [
+          "hypotheticals"
+        ]
+      },
+      "decisionMatches": false,
+      "embedsSaved": 3
+    },
+    {
+      "query": "auth tokens (plain 2)",
+      "kind": "plain",
+      "eager": {
+        "primitive": "plain",
+        "embeds": 3,
+        "ms": 2.894208
+      },
+      "lazy": {
+        "primitive": "plain",
+        "embeds": 3,
+        "ms": 2.94375,
+        "skipped": []
+      },
+      "decisionMatches": true,
+      "embedsSaved": 0
+    },
+    {
+      "query": "cache TTL (plain 3)",
+      "kind": "plain",
+      "eager": {
+        "primitive": "plain",
+        "embeds": 3,
+        "ms": 2.929209
+      },
+      "lazy": {
+        "primitive": "plain",
+        "embeds": 3,
+        "ms": 2.948375,
+        "skipped": []
+      },
+      "decisionMatches": true,
+      "embedsSaved": 0
+    }
+  ],
+  "witness": {
+    "benchmark": "rag-lazy-router",
+    "timestamp": "2026-05-18T01:21:38.605Z",
+    "commit": "08a6ee2218a4b9638e448af7bd92fbc6b487ad4e",
+    "model": "Xenova/all-MiniLM-L6-v2",
+    "corpus": {
+      "id": "2ee25f582b30323502b9270ed47e81ce9bb037f16d2e824083366249f888b81e",
+      "size": 24
+    },
+    "queries": {
+      "id": "8d5d8b66b576f72f3e1f46dd6689309a438c3d50c18923f5ce738de5f6c23963",
+      "count": 7
+    },
+    "results": {
+      "queryCount": 7,
+      "decisionMatches": 4,
+      "decisionEquivalence": false,
+      "eagerTotalEmbeds": 37,
+      "lazyTotalEmbeds": 28,
+      "embedsSaved": 9,
+      "embedsSavedPercent": 24.324324324324326,
+      "eagerMeanLatencyMs": 6.424762,
+      "lazyMeanLatencyMs": 4.098018000000001
+    },
+    "contentHash": "b820cc1fa21834ba5fbe505988a1123a8adabd203fbfd18f656a25cc38cea4b9",
+    "signature": "21bb92c452bd211ea03846c47f603acec3a1a114cb7db5f060592579d96753dcf445ea3d4d8fd15db28ff7db7193330ec5c9aea9677a485f835920a427e98b0e",
+    "publicKey": "302a300506032b6570032100e0275819830d8ac914f26d53c7c350fa46a530d074542efa56e1543b9a2fe7da",
+    "signatureAlgorithm": "ed25519"
+  }
+}

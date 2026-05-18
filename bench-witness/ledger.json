@@ -56,8 +56,8 @@
         }
       },
       "contentHash": "8958ef94a2a84be6202f808915a1a00bbd8ec245fc49010909df6f67fe41733a",
-      "signature": "37c87224dd7491623899ef0945afa3ed7b8f024f41ab08e116719d80708a42940aee26ca9882dab492acd19850c7596b00287c01d644739dcb918270ad724c0f",
-      "publicKey": "302a300506032b657003210014dadbcbdff7389ed0c42afb35672c13186fba459680afb6a3c27874542aa010",
+      "signature": "287205b2163ba87ee16f159bf9c727de25227183bd94b336692f3f4aafb6bda0d9f7a5c57bd9f750bf32b96e0d6f82e04ee133657a6e3908e791b6528f5e1600",
+      "publicKey": "302a300506032b65700321001b2b7170b638b886fd53b337c3c685811e343f27b3affa12c85cf4321f8284f2",
       "signatureAlgorithm": "ed25519",
       "prevContentHash": null,
       "sequence": 1
@@ -147,8 +147,8 @@
         }
       },
       "contentHash": "b87db0cd2cbf469265542ca659c48621cb2d81bb63a3c070029a8134cfc016a5",
-      "signature": "34c9bbedb691bc4b73c5cecf8df9bda847e4a913f6f2331eddadc4ef7b198e8bc2895318ffc82e64eae5501944b2ca0b393e44d05ed296e8875b69ce9441ae0b",
-      "publicKey": "302a300506032b657003210014dadbcbdff7389ed0c42afb35672c13186fba459680afb6a3c27874542aa010",
+      "signature": "2e20c882796b8c69a446e5d6cb78a4c95b1555247eb6aacf053454e3205f1ca6d9ae4caac4e143988a0ab33ed461f7d1f49c58408a64cada5619e5f3025be30b",
+      "publicKey": "302a300506032b65700321001b2b7170b638b886fd53b337c3c685811e343f27b3affa12c85cf4321f8284f2",
       "signatureAlgorithm": "ed25519",
       "prevContentHash": "8958ef94a2a84be6202f808915a1a00bbd8ec245fc49010909df6f67fe41733a",
       "sequence": 2
@@ -226,8 +226,8 @@
         }
       },
       "contentHash": "3e2009dbff5f0a5bd8d0e3139f6cd92f612ec4f23b201572d39ad51704822bde",
-      "signature": "0b7ad5a84589b3c12661f65b19580c91cc54e3ac025505ce8620cd0f06e52cbfdb574722a1cbdcc007115cf8111b6f6d6f43fe89296faddeb9be8e1a05d77e07",
-      "publicKey": "302a300506032b657003210014dadbcbdff7389ed0c42afb35672c13186fba459680afb6a3c27874542aa010",
+      "signature": "b440fb9a102b06968dfaf3231d8d27085d6ca053f74b2ab6d437366001f02ad0bb29b538719956940d99629ae066faee8c3873c2db81e13df849a3f069a14a09",
+      "publicKey": "302a300506032b65700321001b2b7170b638b886fd53b337c3c685811e343f27b3affa12c85cf4321f8284f2",
       "signatureAlgorithm": "ed25519",
       "prevContentHash": "b87db0cd2cbf469265542ca659c48621cb2d81bb63a3c070029a8134cfc016a5",
       "sequence": 3
@@ -299,11 +299,51 @@
         }
       },
       "contentHash": "e96537707e609ca410c2c3d71543633edbcf8d90d782e34c81f007cbd1013873",
-      "signature": "4e12c2979ac6adfec612d4ceb13e9ada683badc8b3f636517e203d690af4acf46ba8fcab762ef8d64484d3da2c382b3dd80754f231caade7cb1fa0c8be121a00",
-      "publicKey": "302a300506032b657003210014dadbcbdff7389ed0c42afb35672c13186fba459680afb6a3c27874542aa010",
+      "signature": "1fb4a7e759c36b4af012231bcae34b648173bad8c9021d4322d9f668fd884444b3ee2c32fb920e460678bccc50d2aa86d19e85b7792451819e93595aa02a190c",
+      "publicKey": "302a300506032b65700321001b2b7170b638b886fd53b337c3c685811e343f27b3affa12c85cf4321f8284f2",
       "signatureAlgorithm": "ed25519",
       "prevContentHash": "3e2009dbff5f0a5bd8d0e3139f6cd92f612ec4f23b201572d39ad51704822bde",
       "sequence": 4
+    },
+    {
+      "benchmark": "rag-lazy-router",
+      "timestamp": "2026-05-18T01:21:38.605Z",
+      "commit": "08a6ee2218a4b9638e448af7bd92fbc6b487ad4e",
+      "model": "Xenova/all-MiniLM-L6-v2",
+      "corpus": {
+        "id": "2ee25f582b30323502b9270ed47e81ce9bb037f16d2e824083366249f888b81e",
+        "size": 24
+      },
+      "queries": {
+        "id": "8d5d8b66b576f72f3e1f46dd6689309a438c3d50c18923f5ce738de5f6c23963",
+        "count": 7
+      },
+      "results": {
+        "__chain": {
+          "prevContentHash": "e96537707e609ca410c2c3d71543633edbcf8d90d782e34c81f007cbd1013873",
+          "sequence": 5
+        },
+        "originalContentHash": "b820cc1fa21834ba5fbe505988a1123a8adabd203fbfd18f656a25cc38cea4b9",
+        "originalSignature": "21bb92c452bd211ea03846c47f603acec3a1a114cb7db5f060592579d96753dcf445ea3d4d8fd15db28ff7db7193330ec5c9aea9677a485f835920a427e98b0e",
+        "originalPublicKey": "302a300506032b6570032100e0275819830d8ac914f26d53c7c350fa46a530d074542efa56e1543b9a2fe7da",
+        "results": {
+          "queryCount": 7,
+          "decisionMatches": 4,
+          "decisionEquivalence": false,
+          "eagerTotalEmbeds": 37,
+          "lazyTotalEmbeds": 28,
+          "embedsSaved": 9,
+          "embedsSavedPercent": 24.324324324324326,
+          "eagerMeanLatencyMs": 6.424762,
+          "lazyMeanLatencyMs": 4.098018000000001
+        }
+      },
+      "contentHash": "9c9bb28beee9847df12c93646bdadb8a99906dbabc8c325aa9b79c4ccf5bb075",
+      "signature": "ad31eb1f1f2a9ca4bcd1e96c9321cf28311021e18da0dfc5b40e3e5c3441293f800232167534fc9cfd38c5a410a414124d7f1ec9e74a970e864b5e79faabb40c",
+      "publicKey": "302a300506032b65700321001b2b7170b638b886fd53b337c3c685811e343f27b3affa12c85cf4321f8284f2",
+      "signatureAlgorithm": "ed25519",
+      "prevContentHash": "e96537707e609ca410c2c3d71543633edbcf8d90d782e34c81f007cbd1013873",
+      "sequence": 5
     }
   ]
 }
