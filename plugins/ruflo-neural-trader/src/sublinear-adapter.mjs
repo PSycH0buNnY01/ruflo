@@ -16,13 +16,34 @@
 // Reference: ADR-126 Phase 3 + ADR-123 Wedge 8.
 
 export class SublinearAdapter {
-  static isMcpAvailable() {
+  /**
+   * Two-probe detection (kept in sync with sublinear-adapter.ts):
+   *   1) globalThis['mcp__ruflo-sublinear__solve'] is a function
+   *   2) process.env.RUFLO_SUBLINEAR_NATIVE === '1' (manual override)
+   * Either probe passing triggers the native dispatch; failure of the call
+   * itself falls back to the local JS CG kernel.
+   */
+  static detectSublinearTool() {
     try {
       const tool = globalThis['mcp__ruflo-sublinear__solve'];
-      return typeof tool === 'function';
+      if (typeof tool === 'function') return true;
     } catch {
-      return false;
+      /* fall through */
     }
+    try {
+      const envFlag = typeof process !== 'undefined' && process.env
+        ? process.env.RUFLO_SUBLINEAR_NATIVE
+        : undefined;
+      if (envFlag === '1' || envFlag === 'true') return true;
+    } catch {
+      /* no process */
+    }
+    return false;
+  }
+
+  /** Back-compat alias for the smoke contract (#2068). */
+  static isMcpAvailable() {
+    return SublinearAdapter.detectSublinearTool();
   }
 
   async solveCG(matrix, vector, opts = {}) {
@@ -41,12 +62,20 @@ export class SublinearAdapter {
       return degrade(start, 'matrix not symmetric within 1e-9');
     }
 
-    if (SublinearAdapter.isMcpAvailable()) {
+    if (SublinearAdapter.detectSublinearTool()) {
       try {
         const result = await callMcpSolve(matrix, vector, opts);
-        return { ...result, latencyMs: performance.now() - start, path: 'cg-mcp' };
+        return {
+          ...result,
+          latencyMs: performance.now() - start,
+          path: 'cg-mcp',
+          method: 'cg-sublinear-native',
+          solver: 'sublinear-time-solver@1.7.0',
+        };
       } catch {
-        // fall through
+        // Native dispatch failed (env-var set without harness mount, or
+        // tool errored). Fall through to local CG; the artifact records
+        // method='cg-local' so the regression is auditable.
       }
     }
 
@@ -60,6 +89,8 @@ export class SublinearAdapter {
       residual,
       latencyMs: performance.now() - start,
       path: 'cg-local',
+      method: 'cg-local',
+      solver: 'local-js-cg',
     };
   }
 }
@@ -71,6 +102,8 @@ function degrade(start, reason) {
     residual: Infinity,
     latencyMs: performance.now() - start,
     path: 'cg-local',
+    method: 'cg-local',
+    solver: 'local-js-cg',
     degraded: true,
     reason,
   };
