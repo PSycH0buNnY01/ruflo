@@ -80,6 +80,11 @@ on:
       - 'v3/@claude-flow/cli/src/mcp-tools/ruvllm-tools.ts'
       - 'v3/@claude-flow/cli/src/ruvector/ruvllm-wasm.ts'
       - 'scripts/smoke-ruvllm-wasm-auto-init.mjs'
+      # agent_execute provider routing (#2042) — executeAgentTask must
+      # not regress to inline Anthropic fetch, and the OpenRouter branch
+      # in callAnthropicMessages must stay wired.
+      - 'v3/@claude-flow/cli/src/mcp-tools/agent-execute-core.ts'
+      - 'scripts/smoke-agent-execute-providers.mjs'
       # GitHub skills/agents/helpers surface (#2089, ADR-127) — injection
       # smoke + actions pin smoke gate every change to the .github surface.
       - '.claude/agents/github/**'
@@ -157,6 +162,9 @@ on:
       - 'v3/@claude-flow/cli/src/mcp-tools/ruvllm-tools.ts'
       - 'v3/@claude-flow/cli/src/ruvector/ruvllm-wasm.ts'
       - 'scripts/smoke-ruvllm-wasm-auto-init.mjs'
+      # agent_execute provider routing (#2042)
+      - 'v3/@claude-flow/cli/src/mcp-tools/agent-execute-core.ts'
+      - 'scripts/smoke-agent-execute-providers.mjs'
       # GitHub skills/agents/helpers surface (#2089, ADR-127)
       - '.claude/agents/github/**'
       - '.claude/skills/github-*/**'
@@ -1010,6 +1018,26 @@ jobs:
 
       - name: Run ruvllm WASM auto-init smoke
         run: node scripts/smoke-ruvllm-wasm-auto-init.mjs
+
+  agent-execute-providers-smoke:
+    # Regression guard for ruvnet/ruflo#2042 — agent_execute hardcoded
+    # the Anthropic SDK and ignored the v3 provider system. Reporter:
+    # @ummcke00. Fix routes executeAgentTask through callAnthropicMessages
+    # which dispatches Anthropic / OpenRouter / Ollama by env var.
+    name: agent_execute provider routing smoke (#2042)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run agent_execute providers smoke
+        run: node scripts/smoke-agent-execute-providers.mjs
 
   github-safe-injection-smoke:
     # Regression guard for ruvnet/ruflo#2089 — ADR-127 Phase 1.
