@@ -1334,6 +1334,27 @@ export const hooksPostTask: MCPTool = {
       // Intelligence module not available — non-fatal
     }
 
+    // ADR-130 Phase 3: fire-and-forget "reinforced-by" edge on task success
+    // Writes: context node → task pattern node (relation: "reinforced-by")
+    if (success) {
+      (async () => {
+        try {
+          const { insertGraphEdge } = await import('../memory/graph-edge-writer.js');
+          const sessionCtxId = `task:${taskId}`;
+          const patternId = `pattern:${taskId}`;
+          await insertGraphEdge({
+            sourceId: sessionCtxId,
+            targetId: patternId,
+            relation: 'reinforced-by',
+            weight: quality,
+            confidence: quality,
+            lastReinforced: new Date().toISOString(),
+            metadata: { success, agent, taskId },
+          });
+        } catch { /* non-fatal */ }
+      })().catch(() => {});
+    }
+
     // Persist routing outcome for runtime learning (file-based, always reliable)
     const taskText = (params.task as string) || '';
     const outcomeKeywords = extractKeywords(taskText);
@@ -2440,6 +2461,24 @@ export const hooksTrajectoryStep: MCPTool = {
         quality,
         timestamp,
       });
+    }
+
+    // ADR-130 Phase 3: fire-and-forget causal edge write
+    // trajectory context node → step node (relation: "trajectory-caused")
+    if (result) {
+      (async () => {
+        try {
+          const { insertGraphEdge } = await import('../memory/graph-edge-writer.js');
+          await insertGraphEdge({
+            sourceId: `task:${trajectoryId}`,
+            targetId: `pattern:${stepId}`,
+            relation: 'trajectory-caused',
+            weight: quality,
+            confidence: quality,
+            metadata: { action, result, trajectoryId, stepId },
+          });
+        } catch { /* non-fatal */ }
+      })().catch(() => {});
     }
 
     return {

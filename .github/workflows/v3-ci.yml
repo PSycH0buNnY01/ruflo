@@ -119,6 +119,19 @@ on:
       - 'scripts/smoke-wasm-rvf-compose.mjs'
       - 'scripts/smoke-wasm-gallery-crud.mjs'
       - 'scripts/smoke-wasm-plugin-bridge.mjs'
+      # ADR-130 — graph intelligence integration (P1-P6)
+      - 'v3/@claude-flow/cli/src/memory/memory-initializer.ts'
+      - 'v3/@claude-flow/cli/src/memory/embedding-quantization.ts'
+      - 'v3/@claude-flow/cli/src/memory/graph-edge-writer.ts'
+      - 'v3/@claude-flow/cli/src/mcp-tools/agentdb-tools.ts'
+      - 'v3/@claude-flow/cli/src/mcp-tools/hooks-tools.ts'
+      - 'plugins/ruflo-graph-intelligence/src/adapters/knowledge-graph-adapter.ts'
+      - 'scripts/smoke-graph-schema-migration.mjs'
+      - 'scripts/smoke-graph-query-dispatch.mjs'
+      - 'scripts/smoke-trajectory-graph-edges.mjs'
+      - 'scripts/smoke-graph-plugin-adapter.mjs'
+      - 'scripts/smoke-graph-pathfinder.mjs'
+      - 'scripts/benchmark-graph.mjs'
   pull_request:
     branches: [main, develop]
     paths:
@@ -1906,3 +1919,161 @@ jobs:
 
       - name: Run wasm plugin bridge smoke
         run: node scripts/smoke-wasm-plugin-bridge.mjs
+
+  graph-schema-smoke:
+    # ADR-130 Phase 1 — graph_edges schema + PQ encoder + edge writer
+    name: graph schema smoke (ADR-130 P1)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          cache-dependency-path: v3/pnpm-lock.yaml
+
+      - name: Install root deps (sql.js for smoke scripts)
+        # The smoke scripts use `await import('sql.js')` (bare ESM specifier),
+        # which resolves from root node_modules. pnpm install inside v3/ alone
+        # does not reliably expose sql.js to scripts run from the repo root.
+        # Same pattern as the #2120 memory-stats smoke job.
+        run: npm install --legacy-peer-deps --no-audit --no-fund --ignore-scripts
+
+      - name: Install v3 workspace deps and build
+        run: |
+          cd v3
+          pnpm install --frozen-lockfile
+          pnpm -r build
+
+      - name: Run graph schema smoke
+        run: node scripts/smoke-graph-schema-migration.mjs
+
+  graph-query-smoke:
+    # ADR-130 Phase 2+5 — agentdb_graph-query + agentdb_graph-pathfinder dispatch
+    name: graph query + pathfinder smoke (ADR-130 P2+P5)
+    runs-on: ubuntu-latest
+    needs: graph-schema-smoke
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          cache-dependency-path: v3/pnpm-lock.yaml
+
+      - name: Install root deps (sql.js for the smoke fixture)
+        # Same pattern as the graph-schema-smoke job — sql.js is a root
+        # transitive dep, not declared in any workspace package.json.
+        run: npm install --legacy-peer-deps --no-audit --no-fund --ignore-scripts
+
+      - name: Install v3 workspace deps and build
+        run: |
+          cd v3
+          pnpm install --frozen-lockfile
+          pnpm -r build
+
+      - name: Symlink sql.js into v3/node_modules
+        run: |
+          mkdir -p v3/node_modules
+          ln -sfn "$(pwd)/node_modules/sql.js" v3/node_modules/sql.js
+
+      - name: Run graph query dispatch smoke
+        run: node scripts/smoke-graph-query-dispatch.mjs
+      - name: Run graph pathfinder smoke
+        run: node scripts/smoke-graph-pathfinder.mjs
+
+  graph-trajectory-smoke:
+    # ADR-130 Phase 3 — SONA trajectory-to-graph hooks
+    name: graph trajectory hooks smoke (ADR-130 P3)
+    runs-on: ubuntu-latest
+    needs: graph-schema-smoke
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          cache-dependency-path: v3/pnpm-lock.yaml
+      - name: Install root deps (sql.js for smoke scripts)
+        run: npm install --legacy-peer-deps --no-audit --no-fund --ignore-scripts
+      - name: Install dependencies and build
+        run: |
+          cd v3
+          pnpm install --frozen-lockfile
+          pnpm -r build
+      - name: Run trajectory graph edges smoke
+        run: node scripts/smoke-trajectory-graph-edges.mjs
+
+  graph-plugin-adapter-smoke:
+    # ADR-130 Phase 4 — plugin adapter contract (GraphEdgesSource)
+    name: graph plugin adapter smoke (ADR-130 P4)
+    runs-on: ubuntu-latest
+    needs: graph-schema-smoke
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          cache-dependency-path: v3/pnpm-lock.yaml
+      - name: Install root deps (sql.js for smoke scripts)
+        run: npm install --legacy-peer-deps --no-audit --no-fund --ignore-scripts
+      - name: Install dependencies and build
+        run: |
+          cd v3
+          pnpm install --frozen-lockfile
+          pnpm -r build
+      - name: Run graph plugin adapter smoke
+        run: node scripts/smoke-graph-plugin-adapter.mjs
+
+  graph-benchmark:
+    # ADR-130 Phase 6 — graph write/query throughput benchmark
+    name: graph benchmark (ADR-130 P6)
+    runs-on: ubuntu-latest
+    needs: [graph-query-smoke, graph-trajectory-smoke, graph-plugin-adapter-smoke]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          cache-dependency-path: v3/pnpm-lock.yaml
+      - name: Install root deps (sql.js for smoke scripts)
+        run: npm install --legacy-peer-deps --no-audit --no-fund --ignore-scripts
+      - name: Install dependencies and build
+        run: |
+          cd v3
+          pnpm install --frozen-lockfile
+          pnpm -r build
+      - name: Run graph benchmark
+        run: node scripts/benchmark-graph.mjs

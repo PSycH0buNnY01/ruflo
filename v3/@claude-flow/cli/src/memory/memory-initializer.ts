@@ -375,6 +375,36 @@ CREATE TABLE IF NOT EXISTS vector_indexes (
 );
 
 -- ============================================
+-- GRAPH EDGES (ADR-130 Phase 1)
+-- Unified knowledge graph backend — sql.js canonical store
+-- ============================================
+
+-- Unified graph edges table (ADR-130)
+-- Node IDs use domain-prefixed format: {domain}:{uuid}
+-- where domain in (mem, agent, task, entity, span, pattern)
+CREATE TABLE IF NOT EXISTS graph_edges (
+  id              TEXT PRIMARY KEY,          -- edge-{uuid}
+  source_id       TEXT NOT NULL,             -- domain-prefixed node ID
+  target_id       TEXT NOT NULL,             -- domain-prefixed node ID
+  relation        TEXT NOT NULL,             -- e.g. "caused", "depends-on", "imports"
+  weight          REAL DEFAULT 1.0,
+  -- Temporal / reliability semantics (ADR-130 §"graph that forgets" property)
+  confidence      REAL DEFAULT 1.0,          -- [0,1]; updated by JUDGE step
+  decay_rate      REAL DEFAULT 0.0,          -- per-day exponential decay applied at read time
+  last_reinforced TEXT,                      -- ISO-8601; set when CONSOLIDATE re-touches edge
+  witness_id      TEXT,                      -- FK to verification/witness-fixes.json (ADR-103)
+  -- Embedding storage: "inline:{base64}" | "vector_indexes:{id}" | NULL
+  embedding_ref   TEXT,
+  metadata        TEXT,                      -- JSON blob for plugin-specific fields
+  created_at      TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_graph_edges_source    ON graph_edges (source_id);
+CREATE INDEX IF NOT EXISTS idx_graph_edges_target    ON graph_edges (target_id);
+CREATE INDEX IF NOT EXISTS idx_graph_edges_relation  ON graph_edges (relation);
+CREATE INDEX IF NOT EXISTS idx_graph_edges_reinforced ON graph_edges (last_reinforced);
+
+-- ============================================
 -- SYSTEM METADATA
 -- ============================================
 

@@ -1,14 +1,14 @@
 {
   "manifest": {
     "schema": "ruflo-witness/v1",
-    "issuedAt": "2026-05-24T17:55:05.238Z",
-    "gitCommit": "4a8894dd3938c443e164e8c7f2bb2475c11ea407",
-    "branch": "impl/adr-129-rvagent-full-integration",
+    "issuedAt": "2026-05-25T02:54:07.276Z",
+    "gitCommit": "82eb431f6c5f41345fe7556324ef9e636587d8bd",
+    "branch": "impl/adr-130-graph-intelligence",
     "os": "macos",
     "releases": {
-      "ruflo": "3.7.0",
-      "claude-flow": "3.7.0",
-      "@claude-flow/cli": "3.7.0",
+      "ruflo": "3.8.0",
+      "claude-flow": "3.8.0",
+      "@claude-flow/cli": "3.8.0",
       "@claude-flow/memory": "3.0.0-alpha.18"
     },
     "summary": {
@@ -21,7 +21,7 @@
         "id": "F1",
         "desc": "hooks_metrics persistence",
         "file": "v3/@claude-flow/cli/dist/src/mcp-tools/hooks-tools.js",
-        "sha256": "3b089f0007711baad5e9177a01ac591a818e5df951be618294f732d92de8b8d9",
+        "sha256": "e8ac993740e7af7dec0352745e8c5406016610b3fae8f1434d16ee417592a302",
         "marker": "getIntelligenceStatsFromMemory",
         "markerVerified": true
       },
@@ -29,7 +29,7 @@
         "id": "F2",
         "desc": "worker-dispatch honesty",
         "file": "v3/@claude-flow/cli/dist/src/mcp-tools/hooks-tools.js",
-        "sha256": "3b089f0007711baad5e9177a01ac591a818e5df951be618294f732d92de8b8d9",
+        "sha256": "e8ac993740e7af7dec0352745e8c5406016610b3fae8f1434d16ee417592a302",
         "marker": "'no-daemon'",
         "markerVerified": true
       },
@@ -45,7 +45,7 @@
         "id": "F4",
         "desc": "agentdb_pattern-store memory-store fallback",
         "file": "v3/@claude-flow/cli/dist/src/mcp-tools/agentdb-tools.js",
-        "sha256": "666141cf59c2e75c9f65fe50eff85076a96d820bddceaba79c0b67a4469b3bb5",
+        "sha256": "13499aa9cfb699987b84b3459f75cf246e08a7653b4d664628f1e28402ad6e76",
         "marker": "memory-store-fallback",
         "markerVerified": true
       },
@@ -93,7 +93,7 @@
         "id": "F10",
         "desc": "intelligence_attention real patterns",
         "file": "v3/@claude-flow/cli/dist/src/mcp-tools/hooks-tools.js",
-        "sha256": "3b089f0007711baad5e9177a01ac591a818e5df951be618294f732d92de8b8d9",
+        "sha256": "e8ac993740e7af7dec0352745e8c5406016610b3fae8f1434d16ee417592a302",
         "marker": "real-flash-attention+memory",
         "markerVerified": true
       },
@@ -117,7 +117,7 @@
         "id": "#1697",
         "desc": "rvf-wasm overrides",
         "file": "package.json",
-        "sha256": "e5693bd64203b7c4760877e993b70d2678b1f74a902ff47ac5c32d40ee25c692",
+        "sha256": "47a51b5736084e594e8adadaab79bf136f6ea8205d1270d64a1a6a86ce854201",
         "marker": "@ruvector/rvf-wasm",
         "markerVerified": true
       },
@@ -141,7 +141,7 @@
         "id": "#1721",
         "desc": "postinstall copies all dist/src/* siblings",
         "file": "v3/@claude-flow/cli/package.json",
-        "sha256": "6f7e7e1a5e7033f8a870e4c60753735fdbc104f1dd39d0ed163a1c562b1aadef",
+        "sha256": "72e93fca83fb6c1d0d8d6d4b5a4dde98e63480ed726173ba5e5fde917c705caf",
         "marker": "postinstall.cjs",
         "markerVerified": true
       },
@@ -245,7 +245,7 @@
         "id": "CAP-MCP-agentdb-tools",
         "desc": "MCP tools (15): agentdb_batch, agentdb_causal-edge, agentdb_consolidate, …",
         "file": "v3/@claude-flow/cli/dist/src/mcp-tools/agentdb-tools.js",
-        "sha256": "666141cf59c2e75c9f65fe50eff85076a96d820bddceaba79c0b67a4469b3bb5",
+        "sha256": "13499aa9cfb699987b84b3459f75cf246e08a7653b4d664628f1e28402ad6e76",
         "marker": "agentdb_batch",
         "markerVerified": true
       },
@@ -341,7 +341,7 @@
         "id": "CAP-MCP-hooks-tools",
         "desc": "MCP tools (62): build-agents, explain, hooks_build-agents, …",
         "file": "v3/@claude-flow/cli/dist/src/mcp-tools/hooks-tools.js",
-        "sha256": "3b089f0007711baad5e9177a01ac591a818e5df951be618294f732d92de8b8d9",
+        "sha256": "e8ac993740e7af7dec0352745e8c5406016610b3fae8f1434d16ee417592a302",
         "marker": "build-agents",
         "markerVerified": true
       },
@@ -461,7 +461,7 @@
         "id": "#1795",
         "desc": "umbrella package missing cli-core dep (ERR_MODULE_NOT_FOUND)",
         "file": "package.json",
-        "sha256": "e5693bd64203b7c4760877e993b70d2678b1f74a902ff47ac5c32d40ee25c692",
+        "sha256": "47a51b5736084e594e8adadaab79bf136f6ea8205d1270d64a1a6a86ce854201",
         "marker": "@claude-flow/cli-core",
         "markerVerified": true
       },
@@ -477,7 +477,7 @@
         "id": "#1791.6",
         "desc": "memory init idempotent when DB exists",
         "file": "v3/@claude-flow/cli/dist/src/memory/memory-initializer.js",
-        "sha256": "6e576455073673058f7e55607e700897b1b8469bcb56b1f03b053381364611ca",
+        "sha256": "fe0f603e8e8de97a382712e4ee616e03c0950d2f54b84d2c414dbd1ddf7e957d",
         "marker": "alreadyExists",
         "markerVerified": true
       },
@@ -629,7 +629,7 @@
         "id": "#1825",
         "desc": "hotfix: workspace: protocol leak in cli optionalDependencies",
         "file": "v3/@claude-flow/cli/package.json",
-        "sha256": "6f7e7e1a5e7033f8a870e4c60753735fdbc104f1dd39d0ed163a1c562b1aadef",
+        "sha256": "72e93fca83fb6c1d0d8d6d4b5a4dde98e63480ed726173ba5e5fde917c705caf",
         "marker": "\"@claude-flow/memory\": \"^3.0.0-alpha.",
         "markerVerified": true
       },
@@ -829,7 +829,7 @@
         "id": "#1889",
         "desc": "agentdb_pattern-search now has a symmetric memory-store-fallback path (tiered: semantic → substring). Previously pattern-store wrote to memory-store-fallback while pattern-search only queried ReasoningBank (always empty), so writes were silently lost. New CI smoke at plugins/ruflo-core/scripts/test-mcp-roundtrips.mjs catches the paired-tool-round-trip regression class.",
         "file": "v3/@claude-flow/cli/dist/src/mcp-tools/agentdb-tools.js",
-        "sha256": "666141cf59c2e75c9f65fe50eff85076a96d820bddceaba79c0b67a4469b3bb5",
+        "sha256": "13499aa9cfb699987b84b3459f75cf246e08a7653b4d664628f1e28402ad6e76",
         "marker": "controller: 'memory-store-fallback'",
         "markerVerified": true
       },
@@ -957,10 +957,10 @@
   },
   "integrity": {
     "manifestHashAlgo": "sha256",
-    "manifestHash": "c13251c0f96fa30d177dd972eb3b9581873448351e040e81e8fdb5027755b48e",
+    "manifestHash": "6b5698f86830f394bed6f0f71d9c4e10b250dd74a22d930e7aad8a926ba8032c",
     "signatureAlgo": "ed25519",
-    "publicKey": "a0dafd71f06396719c3689065572b8f5d7224fd280c4d0d8d1585f8ac15bce12",
-    "signature": "12a31e70747ca78c5a1ceb2cb16fc6b9da3d9333a705981c255df63d53d261a10003eb50a3563030c95549e4de8b9fd2ddb316cbe87f3a2f00baa95ca1ce6900",
+    "publicKey": "0003fe6aaf7fe9a73399a78e1244dc3db9f66b355411ecf1e4563190f96d23df",
+    "signature": "68398a7286d0ff0033dc1cbcb372bdcef90b918c3446bb82d6d94f03602a63b445f1a3a6813e3f9710f7d9bece1c6c0a0d780064a3d752b128b4f443e7188701",
     "seedDerivation": "sha256(gitCommit + ':ruflo-witness/v1')"
   }
 }
