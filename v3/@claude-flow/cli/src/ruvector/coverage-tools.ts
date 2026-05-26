@@ -169,5 +169,3 @@ export const coverageRouterTools: MCPTool[] = [
   hooksCoverageSuggest,
   hooksCoverageGaps,
 ];
-
-export default coverageRouterTools;

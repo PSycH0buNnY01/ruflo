@@ -922,5 +922,3 @@ export const doctorCommand: Command = {
     }
   }
 };
-
-export default doctorCommand;

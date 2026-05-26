@@ -1167,5 +1167,3 @@ export const daemonCommand: Command = {
     return { success: true };
   },
 };
-
-export default daemonCommand;

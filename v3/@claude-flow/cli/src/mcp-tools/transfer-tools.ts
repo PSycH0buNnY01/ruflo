@@ -415,5 +415,3 @@ export const transferTools: MCPTool[] = [
     },
   },
 ];
-
-export default transferTools;

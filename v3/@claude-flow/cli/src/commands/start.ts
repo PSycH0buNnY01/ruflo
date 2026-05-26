@@ -474,5 +474,3 @@ export const startCommand: Command = {
   ],
   action: startAction
 };
-
-export default startCommand;

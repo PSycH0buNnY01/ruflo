@@ -294,5 +294,3 @@ export const progressCommand: Command = {
     return (await checkCommand.action!(ctx)) as CommandResult;
   },
 };
-
-export default progressCommand;

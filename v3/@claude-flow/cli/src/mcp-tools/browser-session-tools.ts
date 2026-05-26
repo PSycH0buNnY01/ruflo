@@ -341,5 +341,3 @@ export const browserSessionTools: MCPTool[] = [
     },
   },
 ];
-
-export default browserSessionTools;

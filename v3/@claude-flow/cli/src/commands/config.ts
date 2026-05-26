@@ -437,5 +437,3 @@ export const configCommand: Command = {
     return { success: true };
   }
 };
-
-export default configCommand;

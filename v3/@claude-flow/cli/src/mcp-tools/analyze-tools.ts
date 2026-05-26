@@ -350,5 +350,3 @@ export const analyzeTools: MCPTool[] = [
   fileRiskTool,
   diffStatsTool,
 ];
-
-export default analyzeTools;

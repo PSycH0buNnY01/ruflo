@@ -1792,5 +1792,3 @@ export const embeddingsCommand: Command = {
     return { success: true };
   },
 };
-
-export default embeddingsCommand;

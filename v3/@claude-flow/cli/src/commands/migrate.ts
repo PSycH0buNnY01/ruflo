@@ -779,5 +779,3 @@ function getMigrationSteps(target: string): Array<{ name: string; description: s
 
   return allSteps.filter(s => s.name.toLowerCase().includes(target.toLowerCase()));
 }
-
-export default migrateCommand;

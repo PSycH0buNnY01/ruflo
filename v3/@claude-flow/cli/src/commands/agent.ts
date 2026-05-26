@@ -1064,5 +1064,3 @@ function formatStatus(status: unknown): string {
       return statusStr;
   }
 }
-
-export default agentCommand;

@@ -554,5 +554,3 @@ export const securityTools: MCPTool[] = [
   aidefenceIsSafeTool,
   aidefenceHasPIITool,
 ];
-
-export default securityTools;

@@ -755,5 +755,3 @@ export const statusCommand: Command = {
   ],
   action: statusAction
 };
-
-export default statusCommand;

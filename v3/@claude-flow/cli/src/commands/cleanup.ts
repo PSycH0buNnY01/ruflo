@@ -265,5 +265,3 @@ export const cleanupCommand: Command = {
     };
   },
 };
-
-export default cleanupCommand;

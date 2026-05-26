@@ -901,5 +901,3 @@ export const sessionCommand: Command = {
     return { success: true };
   }
 };
-
-export default sessionCommand;

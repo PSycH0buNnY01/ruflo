@@ -554,5 +554,3 @@ export const completionsCommand: Command = {
     return { success: true };
   }
 };
-
-export default completionsCommand;

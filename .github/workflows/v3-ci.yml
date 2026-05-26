@@ -1830,6 +1830,27 @@ jobs:
         shell: bash
         run: node scripts/audit-vector-dim.mjs
 
+  no-default-export-audit:
+    # #2141 — guard against re-introducing `export default` in the CLI's
+    # commands/, mcp-tools/, production/, ruvector/ directories.
+    # Callers always use named imports; a default export here is dead code.
+    # Exception: commands/update.ts has an active caller in commands-deep.test.ts.
+    name: No-default-export leak guard (#2141)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Audit for unexpected export default (#2141)
+        shell: bash
+        run: node scripts/audit-no-default-export-leak.mjs
+
   witness-verify:
     # Cryptographic regression guard: runs `ruflo verify --manifest` against
     # the local build to confirm every documented fix in verification.md.json
@@ -1972,7 +1993,7 @@ jobs:
   publish:
     name: Publish to npm (alpha)
     runs-on: ubuntu-latest
-    needs: [build, smoke-install-no-bsqlite, plugin-hooks-smoke, witness-verify]
+    needs: [build, smoke-install-no-bsqlite, plugin-hooks-smoke, witness-verify, no-default-export-audit]
     if: github.ref == 'refs/heads/v3' && github.event_name == 'push'
 
     steps:

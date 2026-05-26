@@ -680,17 +680,3 @@ export async function getLoRAStats(): Promise<LoRAStats> {
   const adapter = await getLoRAAdapter();
   return adapter.getStats();
 }
-
-export default {
-  LoRAAdapter,
-  getLoRAAdapter,
-  resetLoRAAdapter,
-  createLoRAAdapter,
-  adaptEmbedding,
-  trainLoRA,
-  getLoRAStats,
-  DEFAULT_RANK,
-  DEFAULT_ALPHA,
-  INPUT_DIM,
-  OUTPUT_DIM,
-};

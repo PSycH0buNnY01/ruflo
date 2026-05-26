@@ -400,5 +400,3 @@ export const autopilotCommand: Command = {
     return { success: true };
   },
 };
-
-export default autopilotCommand;

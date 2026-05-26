@@ -802,5 +802,3 @@ export const backupCommand: Command = {
     return { success: true };
   },
 };
-
-export default backupCommand;

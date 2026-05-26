@@ -939,5 +939,3 @@ function getAgentPlan(strategy: string): Array<{ role: string; type: string; cou
 
   return plans[strategy] || plans.development;
 }
-
-export default swarmCommand;

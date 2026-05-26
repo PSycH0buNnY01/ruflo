@@ -959,5 +959,3 @@ export const securityCommand: Command = {
     return { success: true };
   },
 };
-
-export default securityCommand;

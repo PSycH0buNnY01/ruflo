@@ -509,5 +509,3 @@ export const benchmarkCommand: Command = {
     return { success: true, message: 'Use a subcommand to run benchmarks' };
   },
 };
-
-export default benchmarkCommand;

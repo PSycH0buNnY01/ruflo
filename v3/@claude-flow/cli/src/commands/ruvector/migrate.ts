@@ -537,5 +537,3 @@ export const migrateCommand: Command = {
     }
   },
 };
-
-export default migrateCommand;

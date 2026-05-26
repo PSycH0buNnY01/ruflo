@@ -1688,5 +1688,3 @@ export const memoryCommand: Command = {
     return { success: true };
   }
 };
-
-export default memoryCommand;

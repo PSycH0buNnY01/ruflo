@@ -622,5 +622,3 @@ export const guidanceCommand: Command = {
     return { success: true };
   },
 };
-
-export default guidanceCommand;

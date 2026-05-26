@@ -2338,5 +2338,3 @@ export const analyzeCommand: Command = {
     return { success: true };
   },
 };
-
-export default analyzeCommand;

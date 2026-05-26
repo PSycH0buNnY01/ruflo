@@ -489,5 +489,3 @@ export const storeCommand: Command = {
     return { success: true };
   },
 };
-
-export default storeCommand;

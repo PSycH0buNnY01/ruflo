@@ -5325,5 +5325,3 @@ export const hooksCommand: Command = {
     return { success: true };
   }
 };
-
-export default hooksCommand;

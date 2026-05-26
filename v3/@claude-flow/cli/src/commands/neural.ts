@@ -1788,5 +1788,3 @@ export const neuralCommand: Command = {
     return { success: true };
   },
 };
-
-export default neuralCommand;

@@ -124,7 +124,6 @@ export const ruvectorCommand: Command = {
   },
 };
 
-export default ruvectorCommand;
 
 // Re-export subcommands for direct access
 export { initCommand } from './init.js';

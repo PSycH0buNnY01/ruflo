@@ -1159,5 +1159,3 @@ export const initCommand: Command = {
   ],
   action: initAction,
 };
-
-export default initCommand;

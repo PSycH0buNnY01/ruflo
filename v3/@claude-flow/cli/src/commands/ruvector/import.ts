@@ -424,5 +424,3 @@ export const importCommand: Command = {
     return { success: true };
   },
 };
-
-export default importCommand;

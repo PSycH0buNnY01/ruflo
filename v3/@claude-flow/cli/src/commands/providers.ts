@@ -567,5 +567,3 @@ export const providersCommand: Command = {
     return { success: true };
   },
 };
-
-export default providersCommand;

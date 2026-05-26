@@ -673,5 +673,3 @@ export const claimsCommand: Command = {
     return { success: true };
   },
 };
-
-export default claimsCommand;

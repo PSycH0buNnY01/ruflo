@@ -309,5 +309,3 @@ export const verifyCommand: Command = {
     return { success: false, exitCode: 1 };
   },
 };
-
-export default verifyCommand;

@@ -394,5 +394,3 @@ export function withErrorHandling<T extends (...args: unknown[]) => Promise<unkn
 ): T {
   return defaultHandler.wrap(handler, context);
 }
-
-export default ErrorHandler;

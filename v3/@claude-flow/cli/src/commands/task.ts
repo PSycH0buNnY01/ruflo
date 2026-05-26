@@ -792,5 +792,3 @@ export const taskCommand: Command = {
     return { success: true };
   }
 };
-
-export default taskCommand;

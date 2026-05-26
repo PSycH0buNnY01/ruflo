@@ -4184,5 +4184,3 @@ export const hooksTools: MCPTool[] = [
   hooksModelOutcome,
   hooksModelStats,
 ];
-
-export default hooksTools;

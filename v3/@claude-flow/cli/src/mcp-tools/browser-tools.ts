@@ -700,5 +700,3 @@ export const browserTools: MCPTool[] = [
     },
   },
 ];
-
-export default browserTools;

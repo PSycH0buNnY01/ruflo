@@ -938,5 +938,3 @@ export const pluginsCommand: Command = {
     return { success: true };
   },
 };
-
-export default pluginsCommand;

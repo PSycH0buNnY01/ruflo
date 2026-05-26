@@ -511,5 +511,3 @@ export const initCommand: Command = {
     }
   },
 };
-
-export default initCommand;

@@ -153,11 +153,3 @@ export const OPTIONAL_PACKAGES = {
     tools: ['neural_*'],
   },
 } as const;
-
-export default {
-  autoInstallPackage,
-  tryImportOrInstall,
-  isPackageAvailable,
-  resetInstallAttempts,
-  OPTIONAL_PACKAGES,
-};

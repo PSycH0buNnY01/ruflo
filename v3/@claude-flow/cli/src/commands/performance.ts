@@ -651,5 +651,3 @@ export const performanceCommand: Command = {
     return { success: true };
   },
 };
-
-export default performanceCommand;

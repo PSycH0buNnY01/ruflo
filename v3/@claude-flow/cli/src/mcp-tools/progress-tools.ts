@@ -383,5 +383,3 @@ export const progressTools: MCPTool[] = [
   progressSummary,
   progressWatch,
 ];
-
-export default progressTools;

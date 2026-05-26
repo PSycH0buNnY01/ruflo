@@ -1451,5 +1451,3 @@ function formatPriority(priority: string): string {
       return priority;
   }
 }
-
-export default hiveMindCommand;

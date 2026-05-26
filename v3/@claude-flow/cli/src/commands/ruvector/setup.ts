@@ -779,5 +779,3 @@ export const setupCommand: Command = {
     }
   },
 };
-
-export default setupCommand;

@@ -901,5 +901,3 @@ export const routeCommand: Command = {
     return { success: true };
   },
 };
-
-export default routeCommand;

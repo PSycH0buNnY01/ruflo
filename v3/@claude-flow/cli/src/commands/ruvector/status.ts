@@ -496,5 +496,3 @@ export const statusCommand: Command = {
     }
   },
 };
-
-export default statusCommand;

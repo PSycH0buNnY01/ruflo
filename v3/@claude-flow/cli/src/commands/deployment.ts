@@ -766,5 +766,3 @@ export const deploymentCommand: Command = {
     return { success: true };
   },
 };
-
-export default deploymentCommand;

@@ -678,5 +678,3 @@ export const guidanceTools: MCPTool[] = [
   guidanceWorkflow,
   guidanceQuickRef,
 ];
-
-export default guidanceTools;

@@ -318,5 +318,3 @@ export function resetAllCircuits(): void {
     breaker.reset();
   }
 }
-
-export default CircuitBreaker;

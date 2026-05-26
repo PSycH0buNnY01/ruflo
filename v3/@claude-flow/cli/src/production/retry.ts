@@ -266,5 +266,3 @@ export function Retryable(
     return descriptor;
   };
 }
-
-export default withRetry;

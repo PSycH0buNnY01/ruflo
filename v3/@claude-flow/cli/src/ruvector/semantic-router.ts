@@ -224,5 +224,3 @@ export class SemanticRouter {
 export function createSemanticRouter(config: RouterConfig): SemanticRouter {
   return new SemanticRouter(config);
 }
-
-export default SemanticRouter;

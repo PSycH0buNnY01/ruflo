@@ -484,5 +484,3 @@ export function createMonitor(config?: Partial<MonitorConfig>): MonitoringHooks 
 export function getMonitor(): MonitoringHooks {
   return createMonitor();
 }
-
-export default MonitoringHooks;

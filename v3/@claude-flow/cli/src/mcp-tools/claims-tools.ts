@@ -918,5 +918,3 @@ export const claimsTools: MCPTool[] = [
     },
   },
 ];
-
-export default claimsTools;

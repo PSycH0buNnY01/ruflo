@@ -439,5 +439,3 @@ export const applianceCommand: Command = {
     return { success: true };
   },
 };
-
-export default applianceCommand;

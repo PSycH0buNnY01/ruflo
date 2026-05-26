@@ -527,5 +527,3 @@ export const benchmarkCommand: Command = {
     }
   },
 };
-
-export default benchmarkCommand;

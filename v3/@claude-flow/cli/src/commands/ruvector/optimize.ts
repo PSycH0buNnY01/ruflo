@@ -572,5 +572,3 @@ export const optimizeCommand: Command = {
     }
   },
 };
-
-export default optimizeCommand;

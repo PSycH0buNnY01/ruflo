@@ -278,5 +278,3 @@ export class RateLimiter {
 export function createRateLimiter(config?: Partial<RateLimiterConfig>): RateLimiter {
   return new RateLimiter(config);
 }
-
-export default RateLimiter;

@@ -808,5 +808,3 @@ export const mcpCommand: Command = {
     return { success: true };
   }
 };
-
-export default mcpCommand;

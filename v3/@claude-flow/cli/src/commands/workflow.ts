@@ -738,5 +738,3 @@ function getTemplateDuration(template: string): string {
   };
   return durations[template] || '10-20 min';
 }
-
-export default workflowCommand;
