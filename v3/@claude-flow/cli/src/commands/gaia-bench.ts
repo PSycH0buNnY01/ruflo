@@ -263,7 +263,7 @@ const runCommand: Command = {
             let judgeResult;
             try {
               judgeResult = await judgeAnswer(
-                { id: q.task_id, expected: q.final_answer },
+                { id: q.task_id, expected: q.final_answer, questionText: q.question },
                 agentResult.finalAnswer,
                 { judgeModel },
               );

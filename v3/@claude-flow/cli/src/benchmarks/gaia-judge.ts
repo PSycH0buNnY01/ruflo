@@ -100,6 +100,70 @@ export function normaliseAnswer(raw: string | null | undefined): string {
 }
 
 // ---------------------------------------------------------------------------
+// Unit-aware numeric matching
+// ---------------------------------------------------------------------------
+
+/**
+ * Attempt to match a candidate numeric answer to an expected answer where the
+ * question implies a unit scale.
+ *
+ * Examples that this catches:
+ *   candidate="17000", expected="17", question contains "thousand"
+ *     → candidate / 1000 ≈ expected → MATCH
+ *   candidate="17", expected="17000", question contains "thousand"
+ *     → candidate × 1000 ≈ expected → MATCH (reverse direction)
+ *
+ * Returns true only when a numeric match is found under one of the scale
+ * multipliers mentioned in the question text.  Returns false for non-numeric
+ * inputs or when no multiplier matches.
+ *
+ * @param candidate    - The raw string from the model (may include commas/spaces).
+ * @param expected     - The raw ground-truth string.
+ * @param questionText - The original question (used to detect multiplier words).
+ */
+export function unitAwareNumberMatch(
+  candidate: string,
+  expected: string,
+  questionText?: string,
+): boolean {
+  // Strip commas, spaces, and trailing unit suffixes for numeric parsing
+  const toNum = (s: string): number => parseFloat(s.replace(/[,\s]/g, ''));
+
+  const candNum = toNum(candidate);
+  const expNum = toNum(expected);
+
+  if (isNaN(candNum) || isNaN(expNum)) return false;
+
+  // Exact numeric equality (handles "17" vs "17.0", etc.)
+  if (Math.abs(candNum - expNum) < 0.001 * (Math.abs(expNum) + 1)) return true;
+
+  if (!questionText) return false;
+
+  const qLower = questionText.toLowerCase();
+
+  const MULTIPLIERS: Array<[string, number]> = [
+    ['trillion', 1e12],
+    ['billion', 1e9],
+    ['million', 1e6],
+    ['thousand', 1e3],
+    ['hundred', 1e2],
+  ];
+
+  for (const [word, mult] of MULTIPLIERS) {
+    if (!qLower.includes(word)) continue;
+
+    // Model returned raw, expected is already in scaled units
+    // e.g. model says "17000", question asks "how many thousand hours", expected is "17"
+    if (Math.abs(candNum / mult - expNum) < 0.01 * (Math.abs(expNum) + 1)) return true;
+
+    // Reverse: model returned scaled, expected is raw
+    if (Math.abs(candNum - expNum / mult) < 0.01 * (Math.abs(candNum) + 1)) return true;
+  }
+
+  return false;
+}
+
+// ---------------------------------------------------------------------------
 // Cache helpers
 // ---------------------------------------------------------------------------
 
@@ -300,13 +364,15 @@ async function callJudge(
 /**
  * Judge a single GAIA answer.
  *
- * @param question   - Object with `id` (task_id) and `expected` (ground truth).
+ * @param question   - Object with `id` (task_id), `expected` (ground truth),
+ *                     and optional `questionText` (the full question string,
+ *                     used for unit-aware numeric matching in Stage 1).
  * @param candidateAnswer - The answer produced by the agent; `null` counts as a miss.
  * @param options    - Optional overrides (model, cache dir, API key, etc.).
  * @returns          - JudgeResult with pass/fail, scoring path, and cost metrics.
  */
 export async function judgeAnswer(
-  question: { id: string; expected: string },
+  question: { id: string; expected: string; questionText?: string },
   candidateAnswer: string | null,
   options?: JudgeOptions,
 ): Promise<JudgeResult> {
@@ -325,11 +391,24 @@ export async function judgeAnswer(
     };
   }
 
-  // ── Stage 1: normalised exact-match (no API call) ──
+  // ── Stage 1a: normalised exact-match (no API call) ──
   const normCandidate = normaliseAnswer(candidate);
   const normExpected = normaliseAnswer(question.expected);
 
   if (normCandidate === normExpected) {
+    return {
+      questionId: question.id,
+      passed: true,
+      scoringPath: 'exact-match',
+      candidateAnswer: candidate,
+      groundTruth: question.expected,
+    };
+  }
+
+  // ── Stage 1b: unit-aware numeric match (no API call) ──
+  // Handles cases like model returns "17000" but expected is "17" and
+  // the question asks "how many thousand hours".
+  if (unitAwareNumberMatch(normCandidate, normExpected, question.questionText)) {
     return {
       questionId: question.id,
       passed: true,
@@ -351,7 +430,11 @@ export async function judgeAnswer(
   // ── Stage 2: LLM-as-judge ──
   const apiKey = resolveApiKey(options?.apiKey);
   const systemPrompt = buildJudgeSystemPrompt();
-  const userMessage = buildJudgeUserMessage(question.expected, question.expected, candidate);
+  const userMessage = buildJudgeUserMessage(
+    question.questionText ?? question.expected,
+    question.expected,
+    candidate,
+  );
 
   const { passed, reason, tokensIn, tokensOut } = await callJudge(
     systemPrompt,
