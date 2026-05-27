@@ -1,5 +1,5 @@
 /**
- * GAIA Agent — ADR-133-PR3
+ * GAIA Agent — ADR-133-PR3 / ADR-135 (planning interval)
  *
  * Multi-turn Anthropic Messages API loop that drives Claude through the
  * GAIA benchmark questions using a tool-use agent pattern.
@@ -10,6 +10,8 @@
  *   2. Call Anthropic Messages API with the registered tool definitions.
  *   3. On `stop_reason === 'tool_use'`: execute all tool_use blocks in
  *      parallel, append results as a `user` turn, and repeat.
+ *      Every PLANNING_INTERVAL turns, inject a planning-checkpoint text
+ *      alongside the tool results to force strategy re-evaluation.
  *   4. On `stop_reason === 'end_turn'`: scan content for the final answer
  *      pattern and return the result.
  *   5. On timeout (maxTurns exceeded): return `{ timedOut: true }`.
@@ -22,7 +24,12 @@
  * Cost discipline: smoke runs use `claude-haiku-4-5` only.  The smoke
  * runner at the bottom of this file enforces that model.
  *
- * Refs: ADR-133, #2156
+ * Planning interval (iter 30 finding #3):
+ *   smolagents CodeAgent uses planning_interval=4 — replans every 4 steps
+ *   to prevent tunnel-vision on bad strategies. Adds ~80 tokens per
+ *   replan event (~$0.0001 each), negligible cost.
+ *
+ * Refs: ADR-133, ADR-135, iter 30, #2156
  */
 
 import { execSync } from 'node:child_process';
@@ -50,6 +57,33 @@ const DEFAULT_MAX_TURNS = 8;
 const DEFAULT_MAX_TOKENS_PER_TURN = 2048;
 const DEFAULT_PER_TURN_TIMEOUT_MS = 60_000;
 
+/**
+ * Every PLANNING_INTERVAL tool_use turns, inject a planning-checkpoint
+ * message to force the agent to reassess its strategy.
+ *
+ * Based on iter 30 research: smolagents CodeAgent uses planning_interval=4.
+ * HAL reliability analysis showed agents fail when they exhaust step
+ * budgets without recalibrating.
+ */
+export const PLANNING_INTERVAL = 4;
+
+/**
+ * Build the planning-checkpoint text injected every PLANNING_INTERVAL turns.
+ * Exported so tests can snapshot the exact wording.
+ */
+export function buildPlanningCheckpoint(turn: number, maxTurns: number): string {
+  return (
+    `[PLANNING CHECKPOINT — turn ${turn}/${maxTurns}]\n` +
+    `You have used ${turn} turns so far. Before continuing:\n` +
+    `1. Briefly summarize what you have learned from the tool calls so far.\n` +
+    `2. State explicitly whether your current approach is making progress toward the answer.\n` +
+    `3. If NOT making progress, switch strategy: try a different tool, different query, ` +
+    `or decompose the question differently.\n` +
+    `4. If you are confident in an answer, provide it now in your standard format: ` +
+    `FINAL_ANSWER: <your answer>`
+  );
+}
+
 /** Pattern Claude must output to signal it has a final answer. */
 const FINAL_ANSWER_RE = /FINAL_ANSWER:\s*(.+)/i;
 
@@ -70,6 +104,8 @@ export interface GaiaAgentResult {
   totalInputTokens: number;
   totalOutputTokens: number;
   wallMs: number;
+  /** Number of planning-checkpoint injections during this run. */
+  replanCount: number;
   timedOut?: boolean;
   error?: string;
 }
@@ -83,6 +119,11 @@ export interface GaiaAgentOptions {
   maxTokensPerTurn?: number;
   /** Per-turn HTTP timeout in milliseconds (default: 60 000). */
   perTurnTimeoutMs?: number;
+  /**
+   * Inject a planning-checkpoint every N tool_use turns (default: PLANNING_INTERVAL = 4).
+   * Set to 0 to disable planning checkpoints.
+   */
+  planningInterval?: number;
   /**
    * Anthropic API key.  Resolved automatically via env var + gcloud fallback
    * if omitted.
@@ -304,6 +345,7 @@ export async function runGaiaAgent(
     maxTurns = DEFAULT_MAX_TURNS,
     maxTokensPerTurn = DEFAULT_MAX_TOKENS_PER_TURN,
     perTurnTimeoutMs = DEFAULT_PER_TURN_TIMEOUT_MS,
+    planningInterval = PLANNING_INTERVAL,
     apiKey: suppliedKey,
     catalogue: suppliedCatalogue,
   } = options;
@@ -316,6 +358,7 @@ export async function runGaiaAgent(
   const toolCallsByName: Record<string, number> = {};
   let totalInputTokens = 0;
   let totalOutputTokens = 0;
+  let replanCount = 0;
 
   const messages: MessageParam[] = [
     { role: 'user', content: buildUserMessage(question.question) },
@@ -345,6 +388,7 @@ export async function runGaiaAgent(
         totalInputTokens,
         totalOutputTokens,
         wallMs: Date.now() - wallStart,
+        replanCount,
         error: err instanceof Error ? err.message : String(err),
       };
     }
@@ -362,6 +406,7 @@ export async function runGaiaAgent(
         totalInputTokens,
         totalOutputTokens,
         wallMs: Date.now() - wallStart,
+        replanCount,
       };
     }
 
@@ -377,9 +422,30 @@ export async function runGaiaAgent(
       // Execute all tool calls in parallel
       const toolResults = await executeToolCalls(resp, catalogue);
 
-      // Append assistant turn (with tool_use blocks) then user turn (with results)
+      // Append assistant turn (with tool_use blocks)
       messages.push({ role: 'assistant', content: resp.content });
-      messages.push({ role: 'user', content: toolResults });
+
+      // Planning checkpoint: every planningInterval turns (starting from turn 1),
+      // inject a replan prompt alongside the tool results.
+      // Conditions: interval is positive, turn>0 (has history), and (turns % interval === 0).
+      const shouldReplan =
+        planningInterval > 0 &&
+        turns > 0 &&
+        turns % planningInterval === 0;
+
+      if (shouldReplan) {
+        replanCount++;
+        const checkpoint = buildPlanningCheckpoint(turns, maxTurns);
+        messages.push({
+          role: 'user',
+          content: [
+            ...toolResults,
+            { type: 'text', text: checkpoint } as ContentBlock,
+          ],
+        });
+      } else {
+        messages.push({ role: 'user', content: toolResults });
+      }
 
       continue;
     }
@@ -394,6 +460,7 @@ export async function runGaiaAgent(
       totalInputTokens,
       totalOutputTokens,
       wallMs: Date.now() - wallStart,
+      replanCount,
     };
   }
 
@@ -406,6 +473,7 @@ export async function runGaiaAgent(
     totalInputTokens,
     totalOutputTokens,
     wallMs: Date.now() - wallStart,
+    replanCount,
     timedOut: true,
   };
 }
@@ -508,7 +576,7 @@ export async function runSmokeTest(opts: {
         `       Expected: "${question.final_answer}" | Got: "${result.finalAnswer ?? 'null'}"`,
       );
       console.log(
-        `       Turns: ${result.turns} | Tools: ${JSON.stringify(result.toolCallsByName)} | Wall: ${result.wallMs}ms`,
+        `       Turns: ${result.turns} | Replans: ${result.replanCount} | Tools: ${JSON.stringify(result.toolCallsByName)} | Wall: ${result.wallMs}ms`,
       );
       if (result.error) console.log(`       Error: ${result.error}`);
       console.log();
