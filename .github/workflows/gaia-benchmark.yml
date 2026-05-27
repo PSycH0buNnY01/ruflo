@@ -1,0 +1,274 @@
+name: GAIA Benchmark (ADR-133)
+
+# Cost-bearing job — calls the Anthropic API and downloads the GAIA dataset
+# from Hugging Face. Three triggers:
+#
+#   1. PR labeled `bench:gaia` (manual gate — GAIA is expensive)
+#      → posts a per-question pass/fail comment back to the PR
+#
+#   2. Weekly cron on main (Mondays 07:00 UTC — not nightly; each run
+#      costs ~$0.50-2.00 depending on level/limit and model mix)
+#      → opens / updates a tracking issue if pass rate < threshold
+#
+#   3. Manual workflow_dispatch with optional overrides
+#      → allows ad-hoc level, limit, and model selection
+#
+# Costs (approximate, Level 1, limit=10, claude-haiku-4-5):
+#   Per run:  ~$0.05-0.20
+#   Weekly:   ~$0.20-0.80 / month
+#
+# Required secrets:
+#   ANTHROPIC_API_KEY  — Anthropic model calls (must be configured)
+#   HF_TOKEN           — Hugging Face dataset access for GAIA
+#                        NOTE: HF_TOKEN is NOT currently in this repo's
+#                        GitHub secrets. The first scheduled/labeled run
+#                        WILL FAIL until a repo admin adds it via:
+#                        gh secret set HF_TOKEN --body "<token>"
+#                        (or Settings → Secrets → Actions → New secret)
+#
+# Refs: ADR-133 (Real GAIA Capability Benchmark), PR #2165
+
+on:
+  pull_request:
+    types: [labeled, synchronize]
+    branches: [main]
+  schedule:
+    - cron: '0 7 * * 1'    # Mondays at 07:00 UTC (weekly — GAIA is expensive)
+  workflow_dispatch:
+    inputs:
+      level:
+        description: 'GAIA difficulty level (1, 2, or 3)'
+        required: false
+        default: '1'
+      limit:
+        description: 'Maximum number of questions to run'
+        required: false
+        default: '10'
+      models:
+        description: 'Comma-separated Anthropic model IDs'
+        required: false
+        default: 'claude-haiku-4-5'
+
+env:
+  PNPM_VERSION: '9.15.4'
+
+jobs:
+  gaia-benchmark:
+    name: GAIA benchmark (ADR-133)
+    runs-on: ubuntu-latest
+    # PR runs only when the bench:gaia label is present.
+    # Schedule + workflow_dispatch always run.
+    if: >-
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' &&
+        contains(github.event.pull_request.labels.*.name, 'bench:gaia'))
+    permissions:
+      contents: read
+      pull-requests: write   # post PR comment
+      issues: write          # open / update tracking issue on cron failure
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          cache-dependency-path: v3/pnpm-lock.yaml
+
+      - name: Build CLI (and workspace deps)
+        working-directory: v3
+        shell: bash
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm --recursive --no-bail run build || true
+          test -f @claude-flow/cli/bin/cli.js \
+            || (echo "::error::cli build did not produce bin/cli.js"; exit 1)
+
+      - name: Validate required secrets
+        shell: bash
+        run: |
+          if [ -z "${{ secrets.ANTHROPIC_API_KEY }}" ]; then
+            echo "::error::ANTHROPIC_API_KEY secret is not configured for this repo."
+            exit 1
+          fi
+          if [ -z "${{ secrets.HF_TOKEN }}" ]; then
+            echo "::error::HF_TOKEN secret is not configured for this repo."
+            echo "::error::Add it via: gh secret set HF_TOKEN --body '<your_hf_token>'"
+            echo "::error::Or via Settings -> Secrets -> Actions -> New repository secret."
+            exit 1
+          fi
+
+      - name: Resolve benchmark parameters
+        id: cfg
+        shell: bash
+        run: |
+          LEVEL="${{ github.event.inputs.level }}"
+          LIMIT="${{ github.event.inputs.limit }}"
+          MODELS="${{ github.event.inputs.models }}"
+          : "${LEVEL:=1}"
+          : "${LIMIT:=10}"
+          : "${MODELS:=claude-haiku-4-5}"
+          echo "level=$LEVEL"   >> "$GITHUB_OUTPUT"
+          echo "limit=$LIMIT"   >> "$GITHUB_OUTPUT"
+          echo "models=$MODELS" >> "$GITHUB_OUTPUT"
+
+      - name: Run GAIA benchmark
+        id: bench
+        working-directory: v3/@claude-flow/cli
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        shell: bash
+        run: |
+          set -e
+          node bin/cli.js gaia-bench run \
+            --level "${{ steps.cfg.outputs.level }}" \
+            --limit "${{ steps.cfg.outputs.limit }}" \
+            --models "${{ steps.cfg.outputs.models }}" \
+            --output json \
+            > /tmp/gaia-raw.json
+
+          # Strip any pre-JSON header lines emitted before --output json kicks in
+          node -e '
+            const fs = require("fs");
+            const raw = fs.readFileSync("/tmp/gaia-raw.json", "utf-8");
+            const i = raw.indexOf("{");
+            if (i < 0) { console.error("no JSON in gaia-bench output"); process.exit(1); }
+            const data = JSON.parse(raw.slice(i));
+            fs.writeFileSync("/tmp/gaia.json", JSON.stringify(data, null, 2));
+
+            // Print summary to step log
+            const s = data.summary || {};
+            console.log("level:  " + (data.level ?? "?"));
+            console.log("total:  " + (s.total ?? "?"));
+            console.log("passed: " + (s.passed ?? "?"));
+            const rate = (s.passRate ?? s.pass_rate ?? 0);
+            console.log("rate:   " + (rate * 100).toFixed(1) + "%");
+            console.log("cost:   $" + (s.estCostUsd ?? s.cost_usd ?? 0).toFixed(4));
+
+            // Expose pass rate for downstream steps
+            const fs2 = require("fs");
+            fs2.appendFileSync(process.env.GITHUB_OUTPUT,
+              "pass_rate=" + rate + "\n");
+          '
+
+      - name: Build markdown summary
+        id: summary
+        shell: bash
+        run: |
+          node -e '
+            const fs = require("fs");
+            const data = JSON.parse(fs.readFileSync("/tmp/gaia.json", "utf-8"));
+            const s = data.summary || {};
+            const results = data.results || [];
+            const rate = s.passRate ?? s.pass_rate ?? 0;
+            const passed = s.passed ?? results.filter(r => r.correct).length;
+            const total = s.total ?? results.length;
+            const cost = (s.estCostUsd ?? s.cost_usd ?? 0).toFixed(4);
+
+            let md = "## GAIA Benchmark — ADR-133\n\n";
+            md += "| Level | Questions | Passed | Pass Rate | Est. Cost |\n";
+            md += "|---|---|---|---|---|\n";
+            md += `| ${data.level ?? "?"} | ${total} | ${passed} | **${(rate*100).toFixed(1)}%** | $${cost} |\n\n`;
+
+            // Per-question table
+            if (results.length) {
+              md += "### Per-question results\n\n";
+              md += "| # | ID | Correct | Model | Question (truncated) |\n";
+              md += "|---|---|---|---|---|\n";
+              for (const [i, r] of results.entries()) {
+                const icon = r.correct ? "pass" : "FAIL";
+                const q = (r.question || "").replace(/\|/g, "/").slice(0, 60);
+                md += `| ${i+1} | \`${r.task_id ?? r.id ?? "-"}\` | ${icon} | \`${r.model ?? "-"}\` | ${q} |\n`;
+              }
+              md += "\n";
+            }
+
+            // Failures detail
+            const fails = results.filter(r => !r.correct);
+            if (fails.length) {
+              md += "### Failures\n\n";
+              md += "| ID | Model | Got | Expected |\n|---|---|---|---|\n";
+              for (const f of fails) {
+                const got = f.error ? `error: ${String(f.error).slice(0,40)}` : (f.answer || "").slice(0, 40);
+                md += `| \`${f.task_id ?? f.id ?? "-"}\` | \`${f.model ?? "-"}\` | ${got || "(empty)"} | ${(f.expected_output ?? f.expected ?? "").slice(0,40)} |\n`;
+              }
+              md += "\n";
+            }
+
+            md += "<sub>Triggered by " + process.env.TRIGGER +
+                  " · workflow: gaia-benchmark.yml" +
+                  " · run: " + process.env.GITHUB_RUN_ID + "</sub>\n";
+
+            fs.writeFileSync("/tmp/gaia-summary.md", md);
+            console.log("Summary written (" + md.length + " bytes)");
+          '
+        env:
+          TRIGGER: ${{ github.event_name }}
+
+      - name: Upload results artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gaia-benchmark-${{ github.run_id }}
+          path: |
+            /tmp/gaia.json
+            /tmp/gaia-summary.md
+          retention-days: 30
+
+      - name: Post PR comment
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        shell: bash
+        run: |
+          gh pr comment "$PR_NUMBER" \
+            --repo "${{ github.repository }}" \
+            --body-file /tmp/gaia-summary.md
+
+      - name: Open / update regression tracking issue on cron failure
+        if: >-
+          github.event_name == 'schedule' &&
+          steps.bench.outputs.pass_rate < '0.6'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PASS_RATE: ${{ steps.bench.outputs.pass_rate }}
+        shell: bash
+        run: |
+          set -e
+          DATE=$(date -u +%Y-%m-%d)
+          TITLE="[gaia-bench] regression: pass-rate ${PASS_RATE} on ${DATE}"
+          EXISTING=$(gh issue list \
+            --repo "${{ github.repository }}" \
+            --state open \
+            --search "in:title gaia-bench regression" \
+            --json number \
+            --jq '.[0].number // empty')
+          BODY=$(cat /tmp/gaia-summary.md)
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" \
+              --repo "${{ github.repository }}" \
+              --body "$BODY"
+          else
+            gh issue create \
+              --repo "${{ github.repository }}" \
+              --title "$TITLE" \
+              --label gaia-bench,regression \
+              --body "$BODY"
+          fi
+
+      - name: Hard-fail if pass rate is below 30% floor
+        if: steps.bench.outputs.pass_rate < '0.3'
+        shell: bash
+        run: |
+          echo "::error::GAIA pass rate ${{ steps.bench.outputs.pass_rate }} is below the 30% hard floor — see artifact."
+          exit 1

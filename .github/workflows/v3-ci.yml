@@ -139,6 +139,9 @@ on:
       - 'scripts/smoke-graph-plugin-adapter.mjs'
       - 'scripts/smoke-graph-pathfinder.mjs'
       - 'scripts/benchmark-graph.mjs'
+      # ADR-133 PR7 — GAIA benchmark CI wiring schema smoke
+      - '.github/workflows/gaia-benchmark.yml'
+      - 'scripts/smoke-gaia-bench-schema.mjs'
   pull_request:
     branches: [main, develop]
     paths:
@@ -237,6 +240,9 @@ on:
       # witness manifests / fix list — so witness-verify runs on PRs that
       # touch them (otherwise a stale per-OS manifest only fails post-merge).
       - 'verification/**'
+      # ADR-133 PR7 — GAIA benchmark CI wiring schema smoke
+      - '.github/workflows/gaia-benchmark.yml'
+      - 'scripts/smoke-gaia-bench-schema.mjs'
   workflow_dispatch:
 
 env:
@@ -2336,3 +2342,18 @@ jobs:
           pnpm -r build
       - name: Run graph benchmark
         run: node scripts/benchmark-graph.mjs
+
+  gaia-bench-yml-smoke:
+    # ADR-133 PR7 — structural guard: gaia-benchmark.yml is well-formed and
+    # contains every required trigger / job / step / secret reference.
+    # No API calls — pure YAML parse + assertion (requires python3 + pyyaml).
+    name: gaia-benchmark.yml schema smoke (ADR-133 P7)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Ensure pyyaml is available
+        run: python3 -c "import yaml" 2>/dev/null || pip3 install pyyaml --quiet
+      - name: Run gaia-bench schema smoke
+        run: node scripts/smoke-gaia-bench-schema.mjs
