@@ -1,63 +1,71 @@
 {
-  "version": "1.0",
-  "description": "Text-only agent capability benchmark — verifiable multi-step reasoning tasks scoreable without tool use. Format inspired by GAIA / SWE-bench but executable via plain Anthropic API. For full GAIA (web browsing, file attachments) see the gated --gaia-real path (not yet implemented; tracked separately).",
-  "answerFormat": "Each question requires the model to reply with the answer wrapped in <answer>...</answer> tags. The harness extracts the tag contents and checks against `expected` per `matchMode`.",
+  "version": "1.1",
+  "description": "Text-only agent capability benchmark — verifiable multi-step reasoning tasks scoreable without tool use. Format inspired by GAIA / SWE-bench / GSM8K. The fixture mixes EASY (regression-floor) and HARD (model-gradient) questions so the pass rate has signal across Haiku → Sonnet → Opus. Real GAIA (web browsing, attachments, HF dataset) remains future work.",
+  "answerFormat": "Each question requires the model to reply with the answer wrapped in <answer>...</answer> tags. The harness extracts the tag contents and checks against `expected` per `matchMode`. Per-task `maxTokens` overrides the default cap.",
   "tasks": [
     {
       "id": "math-prime",
-      "category": "reasoning",
+      "category": "easy:reasoning",
       "prompt": "What is the smallest 3-digit prime number that does not contain the digit 7?",
       "expected": "101",
-      "matchMode": "exact"
-    },
-    {
-      "id": "math-token-cost",
-      "category": "multi-step-arithmetic",
-      "prompt": "A workflow runs 100 tasks. 60 tasks go through a Tier-2 path costing 200 tokens each. 40 tasks go through Tier-3 costing 800 tokens each. A new simulative-planning layer reduces Tier-3 token cost by 30%. What is the new total token cost across all 100 tasks?",
-      "expected": "34400",
-      "matchMode": "exact"
+      "matchMode": "exact",
+      "maxTokens": 192
     },
     {
       "id": "logic-syllogism",
-      "category": "reasoning",
+      "category": "easy:reasoning",
       "prompt": "All routers in tier 1 cost less than $0.001 per call. The Booster router is in tier 1. The Sonnet router costs $0.003 per call. Is the Sonnet router in tier 1? Answer with just \"yes\" or \"no\".",
       "expected": "no",
-      "matchMode": "exact"
-    },
-    {
-      "id": "code-counting",
-      "category": "code-reasoning",
-      "prompt": "Consider this TypeScript snippet:\n```\nexport function a() {}\nfunction b() {}\nexport const c = () => {};\nexport class D {}\nconst e = 1;\nexport { e };\n```\nHow many named exports does this module have? Answer with just an integer.",
-      "expected": "4",
-      "matchMode": "exact"
-    },
-    {
-      "id": "string-manipulation",
-      "category": "reasoning",
-      "prompt": "If you reverse the string 'router' and concatenate it with the first 3 characters of 'planning' (in original order), what string do you get?",
-      "expected": "retuorpla",
-      "matchMode": "exact"
+      "matchMode": "exact",
+      "maxTokens": 160
     },
     {
       "id": "regex-match",
-      "category": "code-reasoning",
+      "category": "easy:code-reasoning",
       "prompt": "Given the regex /^([a-z]+)-(\\d+)$/ and the input string 'pattern-1779526376', what is the value of capture group 2?",
       "expected": "1779526376",
-      "matchMode": "exact"
+      "matchMode": "exact",
+      "maxTokens": 192
     },
     {
-      "id": "ordering",
-      "category": "reasoning",
-      "prompt": "Five agents finished a task with these wall-clock times in seconds: alpha=4.2, bravo=2.1, charlie=3.0, delta=5.5, echo=1.8. List them in order from fastest to slowest, comma-separated, no spaces. Example format: foo,bar,baz",
-      "expected": "echo,bravo,charlie,alpha,delta",
-      "matchMode": "exact"
+      "id": "gsm8k-trip",
+      "category": "hard:gsm8k-style",
+      "prompt": "A delivery van starts a route with 240 packages. At stop A it drops off 1/4 of its current load and picks up 6 new packages. At stop B it drops off 1/3 of its current load and picks up 4 new packages. At stop C it drops off half of its current load. How many packages does the van have after stop C? Answer with the integer.",
+      "expected": "64",
+      "matchMode": "exact",
+      "maxTokens": 256
     },
     {
-      "id": "system-design",
-      "category": "multi-step-reasoning",
-      "prompt": "An HNSW search latency is 1.5ms and a brute-force linear scan over 1000 384-dimensional vectors takes approximately 0.5ms. What is the approximate speedup factor of HNSW over linear scan in this setup, rounded to one decimal place? Express as a single number (e.g., 12.5).",
-      "expected": "0.3",
-      "matchMode": "exact"
+      "id": "gsm8k-discount",
+      "category": "hard:gsm8k-style",
+      "prompt": "A store sells 3 widgets and 2 sprockets for $23. It also sells 2 widgets and 4 sprockets for $26. What is the price of one widget? Answer with the integer dollar amount only.",
+      "expected": "5",
+      "matchMode": "exact",
+      "maxTokens": 256
+    },
+    {
+      "id": "code-trace",
+      "category": "hard:code-trace",
+      "prompt": "Consider this JavaScript code:\n```\nconst counts = new Map();\nfor (const c of 'abracadabra') {\n  counts.set(c, (counts.get(c) ?? 0) + 1);\n}\nlet maxK = '', maxV = 0;\nfor (const [k, v] of counts) {\n  if (v > maxV || (v === maxV && k < maxK)) { maxK = k; maxV = v; }\n}\nconsole.log(`${maxK}:${maxV}`);\n```\nWhat does it print? Answer with just the printed string.",
+      "expected": "a:5",
+      "matchMode": "exact",
+      "maxTokens": 192
+    },
+    {
+      "id": "hard-graph-shortest",
+      "category": "hard:graph-reasoning",
+      "prompt": "A directed graph has these weighted edges: A→B(3), A→C(7), B→C(2), B→D(5), C→D(1), C→E(4), D→E(2). What is the cost of the shortest path from A to E? Answer with the integer.",
+      "expected": "8",
+      "matchMode": "exact",
+      "maxTokens": 192
+    },
+    {
+      "id": "hard-probability",
+      "category": "hard:probability",
+      "prompt": "A bag contains 5 red, 3 blue, and 2 green balls. Two balls are drawn without replacement. What is the probability that both balls are the same color? Express as a fraction in lowest terms in the form a/b (e.g. 3/10).",
+      "expected": "14/45",
+      "matchMode": "exact",
+      "maxTokens": 256
     }
   ]
 }
