@@ -76,6 +76,8 @@ const commandLoaders: Record<string, CommandLoader> = {
   'transfer-store': () => import('./transfer-store.js'),
   cleanup: () => import('./cleanup.js'),
   autopilot: () => import('./autopilot.js'),
+  // GAIA Benchmark Harness (ADR-133)
+  'gaia-bench': () => import('./gaia-bench.js'),
 };
 
 // Cache for loaded commands
