@@ -1,36 +1,41 @@
 /**
- * GAIA Tool: web_search — ADR-133-PR2
+ * GAIA Tool: web_search — ADR-133-PR2 (iter 21 patch)
  *
- * Scrapes DuckDuckGo HTML search results for a query string and returns
- * the top-N snippet titles + URLs as a plain-text block.  No API key
- * required; uses DDG's HTML endpoint which is publicly accessible.
+ * Multi-backend web search that gracefully degrades through available
+ * backends:
  *
- * Design notes:
- * - Uses native Node.js https/http (no external fetch polyfill).
- * - Follows the DDG Lite HTML endpoint: https://html.duckduckgo.com/html/?q=…
- * - Parses result titles + URLs via a simple regex (no DOM parser dependency).
- * - Rate-limit aware: 1-second back-off between calls is the caller's
- *   responsibility (the agent loop enforces this in PR-3).
- * - PDF / binary detection is handled by file_read.ts, not here.
+ *   1. Wikipedia Search API  — no auth, highly reliable, excellent for GAIA's
+ *      factual/encyclopedic questions, sub-second latency.
+ *   2. Brave Search HTML     — scrapes Brave's HTML endpoint when not
+ *      rate-limited (429).  Works well in low-traffic environments.
+ *   3. DDG HTML (original)   — kept as final fallback; may be blocked at
+ *      network level (TCP timeout) in some environments.
  *
- * Refs: ADR-133, #2156
+ * Background: iter 15 failure analysis showed 79 % null returns attributed
+ * to DDG's html.duckduckgo.com timing out with TCP-level block (the IP
+ * 40.89.244.232 drops connections from certain network ranges).  Switching
+ * to Wikipedia as primary resolves the ~40 % null gap for the majority of
+ * GAIA L1 questions that reference Wikipedia-sourced facts.
+ *
+ * Refs: ADR-133, #2156, iter-15 failure decomposition
  */
 
 import * as https from 'node:https';
-import * as http from 'node:http';
 import { GaiaTool, ToolDefinition } from './types.js';
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-const DDG_HTML_URL = 'https://html.duckduckgo.com/html/';
 const DEFAULT_MAX_RESULTS = 5;
-const REQUEST_TIMEOUT_MS = 20_000;
+const REQUEST_TIMEOUT_MS = 12_000; // shorter timeout per backend so we fail-fast
 
-// User-Agent that DDG accepts (plain browser UA).
+/** User-Agent accepted by most services. */
 const UA =
-  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
+
+/** UA for Wikipedia (they prefer a descriptive bot UA). */
+const WIKI_UA = 'GAIA-bench/1.0 (https://github.com/ruvnet/claude-flow; benchmark agent)';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -43,33 +48,18 @@ export interface SearchResult {
 }
 
 // ---------------------------------------------------------------------------
-// HTML fetch helper
+// Generic HTTP helper
 // ---------------------------------------------------------------------------
 
-/**
- * POST to DuckDuckGo's HTML search endpoint and return the raw HTML string.
- * DDG blocks GET for automated scrapers but accepts POST form submissions.
- */
-async function fetchDdgHtml(query: string): Promise<string> {
-  const body = `q=${encodeURIComponent(query)}&b=&kl=&df=`;
-  const bodyBytes = Buffer.from(body, 'utf-8');
-
+function httpsGet(
+  hostname: string,
+  path: string,
+  headers: Record<string, string | number>,
+  timeoutMs: number,
+): Promise<string> {
   return new Promise((resolve, reject) => {
-    const options: https.RequestOptions = {
-      hostname: 'html.duckduckgo.com',
-      path: '/html/',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Content-Length': bodyBytes.length,
-        'User-Agent': UA,
-        Accept: 'text/html,application/xhtml+xml',
-        'Accept-Language': 'en-US,en;q=0.9',
-      },
-    };
-
+    const options: https.RequestOptions = { hostname, path, method: 'GET', headers };
     const req = https.request(options, (res) => {
-      // Follow a single redirect if needed (DDG occasionally redirects to /html/)
       if (
         res.statusCode !== undefined &&
         res.statusCode >= 300 &&
@@ -78,7 +68,54 @@ async function fetchDdgHtml(query: string): Promise<string> {
       ) {
         const loc = res.headers.location;
         res.resume();
-        // Simple follow — only handle absolute https redirects
+        if (loc.startsWith('https://')) {
+          https
+            .get(loc, { headers }, (r2) => {
+              const chunks: Buffer[] = [];
+              r2.on('data', (c: Buffer) => chunks.push(c));
+              r2.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
+              r2.on('error', reject);
+            })
+            .on('error', reject);
+        } else {
+          reject(new Error(`Unexpected redirect: ${loc}`));
+        }
+        return;
+      }
+      if (res.statusCode !== 200) {
+        res.resume();
+        reject(new Error(`HTTP ${res.statusCode ?? 'unknown'}`));
+        return;
+      }
+      const chunks: Buffer[] = [];
+      res.on('data', (c: Buffer) => chunks.push(c));
+      res.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
+      res.on('error', reject);
+    });
+    req.on('error', reject);
+    req.setTimeout(timeoutMs, () => req.destroy(new Error(`timeout after ${timeoutMs}ms`)));
+    req.end();
+  });
+}
+
+function httpsPost(
+  hostname: string,
+  path: string,
+  body: Buffer,
+  headers: Record<string, string | number>,
+  timeoutMs: number,
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const options: https.RequestOptions = { hostname, path, method: 'POST', headers };
+    const req = https.request(options, (res) => {
+      if (
+        res.statusCode !== undefined &&
+        res.statusCode >= 300 &&
+        res.statusCode < 400 &&
+        res.headers.location
+      ) {
+        const loc = res.headers.location;
+        res.resume();
         if (loc.startsWith('https://')) {
           https
             .get(loc, { headers: { 'User-Agent': UA } }, (r2) => {
@@ -89,82 +126,183 @@ async function fetchDdgHtml(query: string): Promise<string> {
             })
             .on('error', reject);
         } else {
-          reject(new Error(`Unexpected redirect target: ${loc}`));
+          reject(new Error(`Unexpected redirect: ${loc}`));
         }
         return;
       }
-
       if (res.statusCode !== 200) {
         res.resume();
-        reject(new Error(`DDG returned HTTP ${res.statusCode ?? 'unknown'}`));
+        reject(new Error(`HTTP ${res.statusCode ?? 'unknown'}`));
         return;
       }
-
       const chunks: Buffer[] = [];
       res.on('data', (c: Buffer) => chunks.push(c));
       res.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
       res.on('error', reject);
     });
-
     req.on('error', reject);
-    req.setTimeout(REQUEST_TIMEOUT_MS, () => {
-      req.destroy(new Error(`web_search timeout after ${REQUEST_TIMEOUT_MS}ms`));
-    });
-
-    req.write(bodyBytes);
+    req.setTimeout(timeoutMs, () => req.destroy(new Error(`timeout after ${timeoutMs}ms`)));
+    req.write(body);
     req.end();
   });
 }
 
 // ---------------------------------------------------------------------------
-// HTML parser (regex-based, no DOM)
+// Backend 1: Wikipedia Search API
 // ---------------------------------------------------------------------------
 
 /**
- * Extract up to `maxResults` search results from DDG HTML.
- *
- * DDG's HTML result structure (stable as of 2026):
- *   <a class="result__a" href="URL">TITLE</a>
- *   <a class="result__snippet">SNIPPET</a>
- *
- * We parse with regex to avoid adding an htmlparser2 dependency.
+ * Query the Wikipedia search API (MediaWiki action=query&list=search).
+ * Returns up to maxResults page titles + snippets + full Wikipedia URLs.
+ * No authentication required.  Typically responds in <500 ms.
  */
-function parseDdgHtml(html: string, maxResults: number): SearchResult[] {
+async function searchWikipedia(query: string, maxResults: number): Promise<SearchResult[]> {
+  const params = new URLSearchParams({
+    action: 'query',
+    list: 'search',
+    srsearch: query,
+    format: 'json',
+    srlimit: String(Math.min(maxResults * 2, 10)), // fetch extra, we may filter some
+    srprop: 'snippet',
+    utf8: '1',
+  });
+  const path = `/w/api.php?${params.toString()}`;
+  const raw = await httpsGet(
+    'en.wikipedia.org',
+    path,
+    { 'User-Agent': WIKI_UA, Accept: 'application/json' },
+    REQUEST_TIMEOUT_MS,
+  );
+
+  const data = JSON.parse(raw) as {
+    query?: { search?: Array<{ title: string; snippet: string }> };
+  };
+
+  const hits = data?.query?.search ?? [];
+  return hits.slice(0, maxResults).map((h) => ({
+    title: h.title,
+    url: `https://en.wikipedia.org/wiki/${encodeURIComponent(h.title.replace(/ /g, '_'))}`,
+    snippet: stripHtml(h.snippet),
+  }));
+}
+
+// ---------------------------------------------------------------------------
+// Backend 2: Brave Search HTML scraper
+// ---------------------------------------------------------------------------
+
+/**
+ * Scrape Brave's HTML search results page.  Brave allows HTML scraping at
+ * moderate rates; returns 429 when rate-limited, in which case the caller
+ * falls through to the next backend.
+ */
+async function searchBrave(query: string, maxResults: number): Promise<SearchResult[]> {
+  const path = `/search?q=${encodeURIComponent(query)}&source=web`;
+  const html = await httpsGet(
+    'search.brave.com',
+    path,
+    {
+      'User-Agent': UA,
+      Accept: 'text/html,application/xhtml+xml',
+      'Accept-Language': 'en-US,en;q=0.9',
+    },
+    REQUEST_TIMEOUT_MS,
+  );
+  return parseBraveHtml(html, maxResults);
+}
+
+function parseBraveHtml(html: string, maxResults: number): SearchResult[] {
   const results: SearchResult[] = [];
 
-  // Match result blocks — DDG wraps each result in <div class="result …">
-  // We extract title+url from the result__a anchor, and snippet from result__snippet.
-  const resultBlockRe =
-    /<a[^>]+class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>[\s\S]*?(?:<a[^>]+class="result__snippet"[^>]*>([\s\S]*?)<\/a>)?/g;
+  // Brave uses Svelte with hash-suffixed classes; we match the class prefix.
+  // Structure: class="result-content <svelte-hash>"><a href="https://...">
+  const blockRe =
+    /class="result-content[^"]*">([\s\S]*?)(?=class="result-content|<\/section>|<\/main>)/g;
+  let m: RegExpExecArray | null;
 
-  let match: RegExpExecArray | null;
-  while ((match = resultBlockRe.exec(html)) !== null && results.length < maxResults) {
-    const rawUrl = match[1] ?? '';
-    const rawTitle = match[2] ?? '';
-    const rawSnippet = match[3] ?? '';
+  while ((m = blockRe.exec(html)) !== null && results.length < maxResults) {
+    const block = m[1];
 
-    // DDG wraps URLs in //duckduckgo.com/l/?uddg=ENCODED_URL
-    const url = decodeRawUrl(rawUrl);
-    const title = stripHtml(rawTitle).trim();
-    const snippet = stripHtml(rawSnippet).trim();
+    // URL: first external https link in block (skip Brave's own domains)
+    const urlMatch = block.match(
+      /href="(https:\/\/(?!(?:cdn\.|imgs\.|search\.brave\.com))[^"]+)"/,
+    );
+    if (!urlMatch) continue;
+    const url = urlMatch[1];
 
-    if (url && title) {
-      results.push({ title, url, snippet });
+    // Title: heading or title-classed element inside block
+    const headingMatch = block.match(
+      /<(?:h2|h3|div|span)[^>]*class="[^"]*(?:header|heading|title)[^"]*"[^>]*>([\s\S]*?)<\/(?:h2|h3|div|span)>/,
+    );
+    let title = '';
+    if (headingMatch) {
+      title = stripHtml(headingMatch[1]).trim();
     }
+    if (!title) {
+      // Fallback: use domain as title
+      try {
+        title = new URL(url).hostname.replace(/^www\./, '');
+      } catch {
+        title = url;
+      }
+    }
+
+    // Snippet: look for snippet-class element
+    const snippetMatch = block.match(
+      /class="snippet[^"]*"[^>]*>([\s\S]*?)<\/(?:p|span|div)>/,
+    );
+    const snippet = snippetMatch ? stripHtml(snippetMatch[1]).trim() : '';
+
+    results.push({ title, url, snippet });
   }
 
   return results;
 }
 
-/**
- * Decode the DDG redirect URL back to the real URL.
- * Input example: //duckduckgo.com/l/?uddg=https%3A%2F%2Fexample.com%2F&rut=…
- */
-function decodeRawUrl(raw: string): string {
+// ---------------------------------------------------------------------------
+// Backend 3: DDG HTML (original, kept as last resort)
+// ---------------------------------------------------------------------------
+
+async function searchDdg(query: string, maxResults: number): Promise<SearchResult[]> {
+  const bodyStr = `q=${encodeURIComponent(query)}&b=&kl=&df=`;
+  const bodyBytes = Buffer.from(bodyStr, 'utf-8');
+  const html = await httpsPost(
+    'html.duckduckgo.com',
+    '/html/',
+    bodyBytes,
+    {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Content-Length': bodyBytes.length,
+      'User-Agent': UA,
+      Accept: 'text/html,application/xhtml+xml',
+      'Accept-Language': 'en-US,en;q=0.9',
+    },
+    REQUEST_TIMEOUT_MS,
+  );
+  return parseDdgHtml(html, maxResults);
+}
+
+function parseDdgHtml(html: string, maxResults: number): SearchResult[] {
+  const results: SearchResult[] = [];
+  const re =
+    /<a[^>]+class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>[\s\S]*?(?:<a[^>]+class="result__snippet"[^>]*>([\s\S]*?)<\/a>)?/g;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(html)) !== null && results.length < maxResults) {
+    const rawUrl = match[1] ?? '';
+    const rawTitle = match[2] ?? '';
+    const rawSnippet = match[3] ?? '';
+    const url = decodeRawDdgUrl(rawUrl);
+    const title = stripHtml(rawTitle).trim();
+    const snippet = stripHtml(rawSnippet).trim();
+    if (url && title) results.push({ title, url, snippet });
+  }
+  return results;
+}
+
+function decodeRawDdgUrl(raw: string): string {
   if (raw.startsWith('//duckduckgo.com/l/')) {
-    const qIdx = raw.indexOf('uddg=');
-    if (qIdx !== -1) {
-      const encoded = raw.slice(qIdx + 5).split('&')[0];
+    const idx = raw.indexOf('uddg=');
+    if (idx !== -1) {
+      const encoded = raw.slice(idx + 5).split('&')[0];
       try {
         return decodeURIComponent(encoded);
       } catch {
@@ -172,12 +310,14 @@ function decodeRawUrl(raw: string): string {
       }
     }
   }
-  // Direct URL (some results skip the redirect)
   if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
   return raw;
 }
 
-/** Strip HTML tags and decode common entities. */
+// ---------------------------------------------------------------------------
+// Shared HTML stripping
+// ---------------------------------------------------------------------------
+
 function stripHtml(html: string): string {
   return html
     .replace(/<[^>]+>/g, '')
@@ -192,19 +332,56 @@ function stripHtml(html: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// Format output for Claude
+// Formatter
 // ---------------------------------------------------------------------------
 
-function formatResults(results: SearchResult[]): string {
-  if (results.length === 0) {
-    return 'No results found.';
-  }
-  return results
+function formatResults(results: SearchResult[], backend: string): string {
+  if (results.length === 0) return 'No results found.';
+  const header = `[source: ${backend}]`;
+  const body = results
     .map(
       (r, i) =>
         `[${i + 1}] ${r.title}\n    URL: ${r.url}${r.snippet ? '\n    ' + r.snippet : ''}`,
     )
     .join('\n\n');
+  return `${header}\n\n${body}`;
+}
+
+// ---------------------------------------------------------------------------
+// Multi-backend search with fallback chain
+// ---------------------------------------------------------------------------
+
+interface BackendResult {
+  results: SearchResult[];
+  backend: string;
+}
+
+async function searchWithFallback(query: string, maxResults: number): Promise<BackendResult> {
+  // Backend 1: Wikipedia — best for GAIA factual questions
+  try {
+    const results = await searchWikipedia(query, maxResults);
+    if (results.length > 0) return { results, backend: 'wikipedia' };
+  } catch (_e) {
+    // fall through to next backend
+  }
+
+  // Backend 2: Brave HTML — good general search
+  try {
+    const results = await searchBrave(query, maxResults);
+    if (results.length > 0) return { results, backend: 'brave' };
+  } catch (_e) {
+    // fall through to next backend
+  }
+
+  // Backend 3: DDG HTML — original backend, may be network-blocked
+  try {
+    const results = await searchDdg(query, maxResults);
+    if (results.length > 0) return { results, backend: 'ddg' };
+  } catch (_e) {
+    // all backends failed
+  }
+
+  return { results: [], backend: 'none' };
 }
 
 // ---------------------------------------------------------------------------
@@ -217,7 +394,9 @@ export class WebSearchTool implements GaiaTool {
   readonly definition: ToolDefinition = {
     name: 'web_search',
     description:
-      'Search the web using DuckDuckGo and return the top results (title, URL, snippet). ' +
+      'Search the web and return the top results (title, URL, snippet). ' +
+      'Uses Wikipedia Search API as primary backend (best for factual/encyclopedic queries), ' +
+      'with Brave Search and DuckDuckGo as fallbacks. ' +
       'Use this when you need current information, external facts, or to verify claims.',
     input_schema: {
       type: 'object',
@@ -244,9 +423,8 @@ export class WebSearchTool implements GaiaTool {
       10,
     );
 
-    const html = await fetchDdgHtml(query);
-    const results = parseDdgHtml(html, maxResults);
-    return formatResults(results);
+    const { results, backend } = await searchWithFallback(query, maxResults);
+    return formatResults(results, backend);
   }
 }
 
