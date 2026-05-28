@@ -4,6 +4,11 @@
  * Runs GAIA benchmark questions through the claude-flow agent loop and
  * reports pass-rate, cost, and per-question results.
  *
+ * --mode=claude-p (iter 54):
+ *   Delegates each question to `claude -p` (Claude Code headless mode), which
+ *   provides WebSearch, WebFetch, Read (multimodal), and Bash for free — the
+ *   same tools HAL uses.  Bypasses the native TS agent loop entirely.
+ *
  * Contract (matches gaia-benchmark.yml workflow expectations):
  *   node bin/cli.js gaia-bench run \
  *     --level <1|2|3> \
@@ -204,6 +209,12 @@ const runCommand: Command = {
       description: 'ADR-135 Track B: inject a planning checkpoint every N tool_use turns (default: 4, set 0 to disable). Based on smolagents finding — prevents tunnel-vision on bad strategies.',
       default: '4',
     },
+    {
+      name: 'mode',
+      type: 'string',
+      description: 'Agent harness: "agent" (default, native TS loop) or "claude-p" (iter 54: delegate to `claude -p` headless for full tool access incl. WebSearch, WebFetch, Read multimodal, Bash).',
+      default: 'agent',
+    },
   ],
   examples: [
     {
@@ -238,6 +249,10 @@ const runCommand: Command = {
       command: 'claude-flow gaia-bench run --level 1 --models claude-sonnet-4-6 --hardness-routing --enable-critic --planning-interval 4',
       description: 'Recommended config: hardness routing + critic + planning checkpoints (~$2/run est.)',
     },
+    {
+      command: 'claude-flow gaia-bench run --level 1 --mode claude-p --models claude-sonnet-4-6 --output json',
+      description: 'iter 54: use claude -p harness (WebSearch, WebFetch, Read multimodal, Bash — same tools as HAL)',
+    },
   ],
   action: async (ctx: CommandContext): Promise<CommandResult> => {
     const level = parseInt(String(ctx.flags.level ?? '1'), 10) as 1 | 2 | 3;
@@ -271,6 +286,9 @@ const runCommand: Command = {
     const enableDecompose = ctx.flags['decompose'] === true || ctx.flags['decompose'] === 'true';
     // ADR-135 Track B: planning interval (passed through to runGaiaAgent via agentOpts).
     const planningInterval = parseInt(String(ctx.flags['planningInterval'] ?? ctx.flags['planning-interval'] ?? '4'), 10);
+
+    // iter 54: --mode flag selects the agent harness.
+    const agentMode = String(ctx.flags['mode'] ?? 'agent');
 
     // Dynamic imports to avoid loading at startup.
     // NOTE: gaia-*.ts sources are pre-compiled under dist/src/benchmarks/ only --
@@ -377,7 +395,107 @@ const runCommand: Command = {
     }
 
     log(`Loaded  : ${questions.length} questions`);
+    if (agentMode === 'claude-p') {
+      log(`Mode    : claude-p (iter 54) — delegates to \`claude -p\` headless`);
+    }
     log('');
+
+    // ---------------------------------------------------------------------------
+    // iter 54: claude-p mode — delegate to Claude Code headless subprocess
+    // ---------------------------------------------------------------------------
+    if (agentMode === 'claude-p') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { runGaiaQuestionsBatchViaClaudeP } = (await import(benchmarksBase + 'gaia-claude-p.js')) as any;
+      // judgeAnswer already imported above (shared with normal agent path)
+
+      const claudePModel = models[0] ?? 'claude-sonnet-4-6';
+      log(output.bold(`Running claude-p mode: ${claudePModel}`));
+      log(output.dim('-'.repeat(40)));
+
+      const claudePResults = await runGaiaQuestionsBatchViaClaudeP(questions, {
+        model: claudePModel,
+        concurrency: Math.min(concurrency, 2), // claude-p subprocesses are heavyweight
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        onProgress: (idx: number, total: number, questionId: string, answer: string | null, costUsd: number) => {
+          log(`  [${idx}/${total}] ${questionId} -- answer="${answer ?? 'null'}" cost=$${costUsd.toFixed(4)}`);
+        },
+      });
+
+      // Judge answers and build output
+      const results: QuestionResult[] = [];
+      let totalCost = 0;
+
+      await Promise.all(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        questions.map(async (q: any, i: number) => {
+          const r = claudePResults[i];
+          totalCost += r?.costUsd ?? 0;
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          let judgeResult: any;
+          try {
+            judgeResult = await judgeAnswer(
+              { id: q.task_id, expected: q.final_answer, questionText: q.question },
+              r?.finalAnswer ?? null,
+              { judgeModel },
+            );
+          } catch (err) {
+            const errorMsg = err instanceof Error ? err.message : String(err);
+            judgeResult = { passed: false, judgeReason: `Judge error: ${errorMsg}` };
+          }
+
+          const verdict = judgeResult.passed ? output.success('PASS') : output.error('FAIL');
+          log(
+            `  ${verdict}  answer="${r?.finalAnswer ?? 'null'}"  expected="${q.final_answer}"` +
+            `  turns=${r?.numTurns ?? 0}  ${((r?.wallMs ?? 0) / 1000).toFixed(1)}s`,
+          );
+
+          results[i] = {
+            task_id: q.task_id,
+            question: q.question,
+            model: claudePModel,
+            correct: judgeResult.passed,
+            answer: r?.finalAnswer ?? null,
+            expected_output: q.final_answer,
+            error: r?.isError ? (r.errorMessage ?? 'claude-p error') : undefined,
+            turns: r?.numTurns ?? 0,
+            wallMs: r?.wallMs ?? 0,
+          } as QuestionResult;
+        }),
+      );
+
+      const passed2 = results.filter((r) => r.correct).length;
+      const total2 = results.length;
+      const passRate2 = total2 > 0 ? passed2 / total2 : 0;
+
+      const claudePOutput: BenchRunOutput = {
+        level,
+        model: `${claudePModel}+claude-p`,
+        summary: {
+          total: total2,
+          passed: passed2,
+          passRate: passRate2,
+          estCostUsd: totalCost,
+          meanTurns: results.reduce((s, r) => s + (r.turns ?? 0), 0) / Math.max(total2, 1),
+          meanWallMs: results.reduce((s, r) => s + (r.wallMs ?? 0), 0) / Math.max(total2, 1),
+        },
+        results,
+      };
+
+      log('');
+      log(output.bold('claude-p Results:'));
+      log(`  Pass rate : ${passed2}/${total2} (${(passRate2 * 100).toFixed(1)}%)`);
+      log(`  Actual cost: $${totalCost.toFixed(4)}`);
+
+      if (outputFormat === 'json') {
+        process.stdout.write(JSON.stringify(claudePOutput, null, 2) + '\n');
+      } else {
+        output.writeln(output.bold('Summary (claude-p mode)'));
+        output.writeln(`${claudePOutput.model.padEnd(32)} ${passed2}/${total2} (${(passRate2 * 100).toFixed(1)}%)  cost=$${totalCost.toFixed(4)}`);
+      }
+
+      return { success: true };
+    }
 
     const allModelOutputs: BenchRunOutput[] = [];
 
