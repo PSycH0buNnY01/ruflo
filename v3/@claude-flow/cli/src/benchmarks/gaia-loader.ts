@@ -22,6 +22,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import * as https from 'node:https';
+import * as url from 'node:url';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -94,6 +95,13 @@ export function resolveHfToken(): string {
 
 function defaultCacheDir(): string {
   return path.join(os.homedir(), '.cache', 'ruflo', 'gaia');
+}
+
+/**
+ * Export the default cache directory path (no side effects).
+ */
+export function getDefaultCacheDir(): string {
+  return defaultCacheDir();
 }
 
 function ensureDir(dir: string): void {
@@ -272,6 +280,101 @@ async function downloadGaiaLevel(
 }
 
 // ---------------------------------------------------------------------------
+// Attachment download (iter-53b)
+// ---------------------------------------------------------------------------
+
+/**
+ * Base URL for GAIA validation attachment files.
+ * Individual files are at: HF_FILE_BASE/<task_id>/<file_name>
+ *
+ * HF now serves files through the Xet storage layer; requests will redirect
+ * (301/302/303) to a Xet download URL that requires NO auth header.
+ * We only send the Authorization header to requests targeting huggingface.co.
+ */
+const HF_FILE_BASE =
+  'https://huggingface.co/datasets/gaia-benchmark/GAIA/resolve/main/2023/validation';
+
+/**
+ * Download a single GAIA attachment file to the cache directory.
+ * Follows HTTP redirects, sending auth only to huggingface.co domains.
+ * Returns the local file path on success, or null on any error.
+ */
+async function downloadAttachment(
+  taskId: string,
+  fileName: string,
+  token: string,
+  cacheDir: string,
+): Promise<string | null> {
+  const destPath = path.join(cacheDir, fileName);
+  if (fs.existsSync(destPath)) return destPath; // already cached
+
+  const fileUrl = `${HF_FILE_BASE}/${taskId}/${encodeURIComponent(fileName)}`;
+  ensureDir(cacheDir);
+
+  return new Promise((resolve) => {
+    function doGet(requestUrl: string, depth: number): void {
+      if (depth > 5) { resolve(null); return; }
+
+      const parsed = new url.URL(requestUrl);
+      const headers: Record<string, string> = {
+        'User-Agent': 'ruflo-gaia-loader/1.0',
+      };
+      if (parsed.hostname.includes('huggingface.co')) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const req = https.get(requestUrl, { headers }, (res) => {
+        if (res.statusCode && [301, 302, 303, 307, 308].includes(res.statusCode)) {
+          const loc = res.headers['location'];
+          res.resume();
+          if (loc) doGet(loc, depth + 1);
+          else resolve(null);
+          return;
+        }
+        if (res.statusCode !== 200) {
+          res.resume();
+          resolve(null);
+          return;
+        }
+        const chunks: Buffer[] = [];
+        res.on('data', (c: Buffer) => chunks.push(c));
+        res.on('end', () => {
+          try {
+            fs.writeFileSync(destPath, Buffer.concat(chunks));
+            resolve(destPath);
+          } catch {
+            resolve(null);
+          }
+        });
+        res.on('error', () => resolve(null));
+      });
+      req.on('error', () => resolve(null));
+      req.setTimeout(60_000, () => { req.destroy(); resolve(null); });
+    }
+    doGet(fileUrl, 0);
+  });
+}
+
+/**
+ * Download all attachment files referenced by the questions list.
+ * Mutates each question's `file_path` field in place.
+ * Skips questions without a file_name.
+ */
+export async function resolveAttachments(
+  questions: GaiaQuestion[],
+  token: string,
+  cacheDir: string,
+): Promise<void> {
+  const withFiles = questions.filter((q) => q.file_name);
+  await Promise.all(
+    withFiles.map(async (q) => {
+      const localPath = await downloadAttachment(q.task_id, q.file_name!, token, cacheDir);
+      q.file_path = localPath;
+    }),
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
@@ -294,6 +397,8 @@ export async function loadGaia(options: LoadGaiaOptions = {}): Promise<GaiaQuest
 
   const token = resolveHfToken();
   const questions = await downloadGaiaLevel(level, token, cacheDir);
+  // Resolve attachment files in parallel (iter-53b: populates file_path on each question)
+  await resolveAttachments(questions, token, cacheDir);
   return limit !== undefined ? questions.slice(0, limit) : questions;
 }
 

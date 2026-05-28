@@ -43,6 +43,8 @@
  */
 
 import { execSync } from 'node:child_process';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import {
   GaiaQuestion,
   SMOKE_FIXTURE,
@@ -243,6 +245,77 @@ function buildUserMessage(question: string): string {
   return question;
 }
 
+/** Anthropic image content block for vision API. */
+interface ImageContentBlock {
+  type: 'image';
+  source: {
+    type: 'base64';
+    media_type: string;
+    data: string;
+  };
+}
+
+/**
+ * Parse an IMAGE_BASE64 marker returned by file_read's extractImage().
+ * Returns an Anthropic image content block, or null if the marker is invalid.
+ *
+ * Marker format: [IMAGE_BASE64:{"mediaType":"image/png","base64":"...","path":"..."}]
+ */
+export function parseImageMarker(marker: string): ImageContentBlock | null {
+  const match = /^\[IMAGE_BASE64:(\{.*\})\]$/.exec(marker.trim());
+  if (!match) return null;
+  try {
+    const parsed = JSON.parse(match[1]) as { mediaType: string; base64: string };
+    if (!parsed.mediaType || !parsed.base64) return null;
+    return {
+      type: 'image',
+      source: { type: 'base64', media_type: parsed.mediaType, data: parsed.base64 },
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Build the initial user-turn content for a GAIA question.
+ *
+ * - Image attachment: returns content array with text block + inline base64 image block
+ *   so Claude can see the image on turn 0 without a file_read call.
+ * - Non-image attachment: appends a path hint to the question text so Claude knows
+ *   to call file_read.
+ * - No attachment: returns the question as plain text.
+ */
+function buildInitialContent(question: GaiaQuestion): ContentBlock[] | string {
+  const questionText = buildUserMessage(question.question);
+
+  if (!question.file_path) return questionText;
+
+  const ext = path.extname(question.file_path).toLowerCase();
+  const imageExts = ['.png', '.jpg', '.jpeg', '.gif', '.webp'];
+
+  if (imageExts.includes(ext)) {
+    let buf: Buffer;
+    try {
+      buf = fs.readFileSync(question.file_path);
+    } catch {
+      return questionText + `\n\nNote: Attached image at path: ${question.file_path}\nCall file_read to get the IMAGE_BASE64 marker.`;
+    }
+    const mediaTypeMap: Record<string, string> = {
+      '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+      '.gif': 'image/gif', '.webp': 'image/webp',
+    };
+    return [
+      { type: 'text', text: questionText } as ContentBlock,
+      {
+        type: 'image',
+        source: { type: 'base64', media_type: mediaTypeMap[ext] ?? 'image/png', data: buf.toString('base64') },
+      } as unknown as ContentBlock,
+    ];
+  }
+
+  return questionText + `\n\nThis question has an attached file. Call file_read with path="${question.file_path}" to read it, then answer the question.`;
+}
+
 // ---------------------------------------------------------------------------
 // Anthropic Messages API call (single turn)
 // ---------------------------------------------------------------------------
@@ -261,7 +334,8 @@ interface AnthropicResponse {
 
 interface MessageParam {
   role: 'user' | 'assistant';
-  content: ContentBlock[] | string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  content: ContentBlock[] | string | any[];
 }
 
 async function callAnthropicWithTools(
@@ -329,8 +403,24 @@ function extractFinalAnswer(resp: AnthropicResponse): string | null {
 interface ToolResultMessageContent {
   type: 'tool_result';
   tool_use_id: string;
-  content: string;
+  content: string | unknown[];
   is_error?: boolean;
+}
+
+/**
+ * If a tool output string is entirely an IMAGE_BASE64 marker, convert it to
+ * a mixed content array [text_hint, image_block] for the Anthropic vision API.
+ * Otherwise return the string unchanged.
+ */
+function wrapToolOutput(output: string): string | unknown[] {
+  const imageBlock = parseImageMarker(output);
+  if (imageBlock) {
+    return [
+      { type: 'text', text: 'Image file contents:' },
+      imageBlock,
+    ];
+  }
+  return output;
 }
 
 async function executeToolCalls(
@@ -357,7 +447,7 @@ async function executeToolCalls(
         return {
           type: 'tool_result',
           tool_use_id: block.id,
-          content: output,
+          content: wrapToolOutput(output),
         };
       } catch (err) {
         return {
@@ -408,7 +498,7 @@ export async function runGaiaAgent(
   let replanCount = 0;
 
   const messages: MessageParam[] = [
-    { role: 'user', content: buildUserMessage(question.question) },
+    { role: 'user', content: buildInitialContent(question) },
   ];
 
   let turns = 0;
@@ -483,15 +573,15 @@ export async function runGaiaAgent(
       if (shouldReplan) {
         replanCount++;
         const checkpoint = buildPlanningCheckpoint(turns, maxTurns);
-        messages.push({
-          role: 'user',
-          content: [
-            ...toolResults,
-            { type: 'text', text: checkpoint } as ContentBlock,
-          ],
-        });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const content: any[] = [
+          ...toolResults,
+          { type: 'text', text: checkpoint } as ContentBlock,
+        ];
+        messages.push({ role: 'user', content });
       } else {
-        messages.push({ role: 'user', content: toolResults });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        messages.push({ role: 'user', content: toolResults as any[] });
       }
 
       continue;
