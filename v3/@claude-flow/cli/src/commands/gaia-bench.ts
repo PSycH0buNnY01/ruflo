@@ -210,6 +210,12 @@ const runCommand: Command = {
       description: 'iter 62: enable convergence layer — forces a final commit when max_turns, loop, or token_overflow is detected (default: true). Disabling is for ablation only.',
       default: 'true',
     },
+    {
+      name: 'mode',
+      type: 'string',
+      description: 'Execution mode: "single" (default single-model), "ensemble" (parallel N-model voting), or "dag" (Co-Sight DAG planner+actors, ADR-139 iter 64).',
+      default: 'single',
+    },
   ],
   examples: [
     {
@@ -283,6 +289,9 @@ const runCommand: Command = {
       ctx.flags['enableConvergence'] === false || ctx.flags['enableConvergence'] === 'false' ||
       ctx.flags['enable-convergence'] === false || ctx.flags['enable-convergence'] === 'false'
     );
+    // iter 64: DAG mode (Co-Sight architecture).
+    const mode = String(ctx.flags['mode'] ?? 'single');
+    const isDagMode = mode === 'dag';
 
     // Dynamic imports to avoid loading at startup.
     // NOTE: gaia-*.ts sources are pre-compiled under dist/src/benchmarks/ only --
@@ -390,6 +399,62 @@ const runCommand: Command = {
 
     log(`Loaded  : ${questions.length} questions`);
     log('');
+
+    // ---------------------------------------------------------------------------
+    // iter 64: DAG mode dispatch (Co-Sight architecture — ADR-139 Addendum)
+    // ---------------------------------------------------------------------------
+    if (isDagMode) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { runDagPilot } = (await import(benchmarksBase + 'gaia-dag.js')) as any;
+      const planModel = models[0] ?? 'claude-sonnet-4-6';
+      log(output.bold(`DAG mode — planner: ${planModel}, actor: ${process.env['ACT_MODEL'] ?? 'gemini-2.5-pro'}`));
+      log(output.dim('-'.repeat(60)));
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const dagResult: any = await runDagPilot(questions, { planModel });
+      const out = {
+        mode: 'dag',
+        planModel,
+        actModel: process.env['ACT_MODEL'] ?? 'gemini-2.5-pro',
+        summary: {
+          total: dagResult.total,
+          passed: dagResult.correct,
+          passRate: dagResult.accuracy,
+          estCostUsd: dagResult.totalCostUsd,
+          projectedCost53Q: dagResult.projectedCost53Q,
+          avgStepsPerQuestion: dagResult.avgStepsPerQuestion,
+          meanWallMs: dagResult.meanWallMs,
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        results: dagResult.perQuestion.map((q: any) => ({
+          task_id: q.taskId,
+          question: q.question,
+          correct: q.correct,
+          answer: q.got,
+          expected_output: q.expected,
+          steps: q.steps,
+          completedSteps: q.completedSteps,
+          blockedSteps: q.blockedSteps,
+          plannerCycles: q.plannerCycles,
+          costUsd: q.costUsd,
+          wallMs: q.wallMs,
+        })),
+      };
+
+      if (outputFormat === 'json') {
+        process.stdout.write(JSON.stringify(out, null, 2) + '\n');
+      } else {
+        log(`\nDAG Results: ${dagResult.correct}/${dagResult.total} (${(dagResult.accuracy * 100).toFixed(1)}%)`);
+        log(`Avg steps/Q: ${dagResult.avgStepsPerQuestion.toFixed(1)}`);
+        log(`Cost: $${dagResult.totalCostUsd.toFixed(4)} | Projected 53Q: $${dagResult.projectedCost53Q.toFixed(2)}`);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        for (const q of dagResult.perQuestion as any[]) {
+          const icon = q.correct ? '[PASS]' : '[FAIL]';
+          log(`  ${icon} ${q.taskId}: got="${q.got}" expected="${q.expected}" steps=${q.steps}`);
+        }
+      }
+      return { success: true, data: out };
+    }
 
     const allModelOutputs: BenchRunOutput[] = [];
 

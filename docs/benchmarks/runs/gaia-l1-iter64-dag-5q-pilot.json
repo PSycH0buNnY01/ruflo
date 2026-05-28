@@ -1,0 +1,88 @@
+{
+  "run_type": "dag-5q-pilot",
+  "iter": 64,
+  "timestamp": "2026-05-28T15:57:08.495Z",
+  "planModel": "claude-sonnet-4-6",
+  "actModel": "gemini-2.5-pro",
+  "summary": {
+    "total": 5,
+    "correct": 2,
+    "accuracy": 0.4,
+    "avgStepsPerQuestion": 2,
+    "totalCostUsd": 0.0898775,
+    "projectedCost53Q": 0.9527014999999999,
+    "meanWallMs": 31319
+  },
+  "baseline": {
+    "correct": 0,
+    "total": 5,
+    "source": "iter-63b"
+  },
+  "perQuestion": [
+    {
+      "taskId": "5d0080cb-90d7-4712-bc33-848150e917d3",
+      "question": "What was the volume in m^3 of the fish bag that was calculated in the University",
+      "expected": "0.1777",
+      "got": "0.1777",
+      "correct": true,
+      "steps": 1,
+      "completedSteps": 1,
+      "blockedSteps": 0,
+      "plannerCycles": 1,
+      "costUsd": 0.00790675,
+      "wallMs": 14257
+    },
+    {
+      "taskId": "cffe0e32-c9a6-4c52-9877-78ceb4aaa9fb",
+      "question": "An office held a Secret Santa gift exchange where each of its twelve employees w",
+      "expected": "Fred",
+      "got": "The information needed to answer this question is contained in a document that could not be read (text extraction from the DOCX file is not supported). Without access to the employee profiles and gift exchange data, it is not possible to determine who did not give a gift. Please provide the document contents in a readable format (e.g., paste the text directly) so the question can be answered.",
+      "correct": false,
+      "steps": 2,
+      "completedSteps": 0,
+      "blockedSteps": 1,
+      "plannerCycles": 2,
+      "costUsd": 0.009623499999999998,
+      "wallMs": 14797
+    },
+    {
+      "taskId": "ec09fa32-d03f-4bf8-84b0-1f16922c3ae4",
+      "question": "Here's a fun riddle that I think you'll enjoy.\n\nYou have been selected to play t",
+      "expected": "3",
+      "got": null,
+      "correct": false,
+      "steps": 1,
+      "completedSteps": 0,
+      "blockedSteps": 1,
+      "plannerCycles": 1,
+      "costUsd": 0.023285,
+      "wallMs": 36636
+    },
+    {
+      "taskId": "46719c30-f4c3-4cad-be07-d5cb21eee6bb",
+      "question": "Of the authors (First M. Last) that worked on the paper \"Pie Menus or Linear Men",
+      "expected": "Mapping Human Oriented Information to Software Agents for Online Systems Usage",
+      "got": "Mapping Human-Oriented Information to Software Agents for Online Systems Usage",
+      "correct": false,
+      "steps": 3,
+      "completedSteps": 3,
+      "blockedSteps": 0,
+      "plannerCycles": 1,
+      "costUsd": 0.02492825,
+      "wallMs": 49146
+    },
+    {
+      "taskId": "b816bfce-3d80-4913-a07d-69b752ce6377",
+      "question": "In Emily Midkiff's June 2014 article in a journal named for the one of Hreidmar'",
+      "expected": "fluffy",
+      "got": "fluffy",
+      "correct": true,
+      "steps": 3,
+      "completedSteps": 3,
+      "blockedSteps": 0,
+      "plannerCycles": 1,
+      "costUsd": 0.024134000000000003,
+      "wallMs": 41759
+    }
+  ]
+}
