@@ -29,6 +29,17 @@ All ADRs are located in [`/v3/implementation/adrs/`](../../implementation/adrs/)
 | [ADR-046](../../implementation/adrs/ADR-046-ruflo-rebrand.md) | Dual Umbrella: claude-flow + ruflo | Accepted |
 | [ADR-047](../../implementation/adrs/ADR-047-fast-mode-integration.md) | Fast Mode Integration | Proposed |
 
+## Dream Cycle ADRs
+
+| ADR | Title | Status | Date |
+|-----|-------|--------|------|
+| [ADR-131](ADR-131-simulative-planning-router.md) | Simulative Planning Router | Proposed | 2026-05-27 |
+| [ADR-132](ADR-132-hierarchical-consensus-topology.md) | Hierarchical Consensus Topology | Proposed | 2026-05-29 |
+| [ADR-141](ADR-141-taubench-campaign.md) | TAU-bench Campaign | Proposed | 2026-05-27 |
+| [ADR-142](ADR-142-per-task-bandit-priors.md) | Per-Task Bandit Priors | Proposed | 2026-05-27 |
+| [ADR-143](ADR-143-deterministic-tier1-codemods.md) | Deterministic Tier-1 Codemods | Accepted | 2026-05-29 |
+| [ADR-144](ADR-144-mv-hnsw-agent-memory-upgrade.md) | MV-HNSW Agent Memory Upgrade | Proposed | 2026-05-30 |
+
 ## Summary Documents
 
 - [ADR Status Summary](../../implementation/adrs/ADR-STATUS-SUMMARY.md) - Implementation status overview
@@ -70,5 +81,5 @@ All ADRs are located in [`/v3/implementation/adrs/`](../../implementation/adrs/)
 
 ---
 
-**Last Updated:** 2026-01-14
-**CLI Version:** @claude-flow/cli@3.0.0-alpha.104
+**Last Updated:** 2026-05-30
+**CLI Version:** @claude-flow/cli@3.6.10
