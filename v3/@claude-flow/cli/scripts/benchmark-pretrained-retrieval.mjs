@@ -56,6 +56,8 @@ async function main() {
   // Default runs hybrid (cosine + BM25 + MMR per ADR-078).
   const listTool = neural.neuralTools.find((t) => t.name === 'neural_patterns');
   const mode = process.env.HYBRID === '0' ? 'cosine' : 'hybrid';
+  // ADR-080 opt-in cross-encoder rerank — set RERANK=1 to enable.
+  const useRerank = process.env.RERANK === '1';
 
   // top-1-uniqueness — fraction of queries whose top-1 result is NOT the
   // same pattern ID as another query's top-1. Catches the "everyone gets
@@ -65,7 +67,7 @@ async function main() {
   const tQuery0 = performance.now();
   const results = [];
   for (const { q, expect } of QUERIES) {
-    const r = await listTool.handler({ action: 'search', query: q, mode, limit: TOP_K });
+    const r = await listTool.handler({ action: 'search', query: q, mode, limit: TOP_K, rerank: useRerank });
     const matches = (r.patterns || r.results || r.matches || []).slice(0, TOP_K);
     if (matches.length > 0) {
       const top1 = matches[0].id;
@@ -134,6 +136,7 @@ async function main() {
     runAt: new Date().toISOString(),
     benchmark: 'pretrained-retrieval',
     mode,                              // ADR-078: which retrieval path was used
+    rerank: useRerank,                 // ADR-080: cross-encoder rerank on/off
     storeSize: total,
     queries: QUERIES.length,
     matchedQueries,
@@ -153,7 +156,7 @@ async function main() {
     console.log(JSON.stringify(summary, null, 2));
   } else {
     console.log(`# Pretrained-retrieval benchmark — proof of learning`);
-    console.log(`Mode: ${mode}${mode === 'hybrid' ? ' (cosine + BM25 + MMR, ADR-078)' : ' (cosine-only, pre-3.10.18)'}`);
+    console.log(`Mode: ${mode}${mode === 'hybrid' ? ' (cosine + BM25 + MMR, ADR-078)' : ' (cosine-only, pre-3.10.18)'}${useRerank ? ' + cross-encoder rerank (ADR-080)' : ''}`);
     console.log(`Store size: ${total} patterns`);
     console.log(`Queries: ${QUERIES.length}`);
     console.log(`Match rate: ${(summary.matchRate * 100).toFixed(0)}% (${matchedQueries}/${QUERIES.length})`);

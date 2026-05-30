@@ -499,6 +499,7 @@ export const neuralTools: MCPTool[] = [
         subjectWeight: { type: 'number', description: 'Hybrid: multi-field BM25 weight for subject/name (default 3.0)' },
         bodyWeight: { type: 'number', description: 'Hybrid: multi-field BM25 weight for body/content (default 1.0)' },
         typePenaltyFactor: { type: 'number', description: 'Hybrid: meta-commit score multiplier — release/merge/bump commits × this factor (default 1.0 = disabled; set 0.5 for aggressive suppression)' },
+        rerank: { type: 'boolean', description: 'Hybrid: opt-in cross-encoder rerank pass over the top-K (ADR-080). Adds ~20-40 ms per (query, doc) pair; first call downloads ~30MB model. Gracefully degrades to hybrid+MMR order when unavailable.' },
         data: { type: 'object', description: 'Pattern data' },
       },
     },
@@ -637,20 +638,62 @@ export const neuralTools: MCPTool[] = [
           ? baseHybrid
           : baseHybrid.map((s, i) => s * typePenalty(patterns[i].name, typeFactor));
 
-        // MMR diversity over top-K*3 hybrid candidates → top-K final.
+        // Candidate pool sizing: k*3 for MMR, k*6 for cross-encoder (it needs
+        // more options to find the truly-best). ADR-080 ablation: rerank over
+        // a narrow post-MMR slice degrades top-1; reranking a wider hybrid
+        // top-K*6 pool restores and exceeds the no-rerank baseline.
+        const useRerank = input.rerank === true || String(input.rerank) === 'true';
+        const poolSize = useRerank ? k * 6 : k * 3;
         const prelim = patterns
           .map((p, i) => ({ p, hybrid: hybridArr[i], cosine: cosineArr[i], bm25: bm25Arr[i] }))
           .sort((a, b) => b.hybrid - a.hybrid)
-          .slice(0, Math.min(k * 3, patterns.length));
+          .slice(0, Math.min(poolSize, patterns.length));
 
-        const mmrCandidates = prelim.map(({ p, hybrid, cosine, bm25 }) => ({
+        const candidates = prelim.map(({ p, hybrid, cosine, bm25 }) => ({
           id: p.id, name: p.name, type: p.type,
           embedding: p.embedding,
+          content: p.content,
           relevance: hybrid,
           _cosine: cosine,
           _bm25: bm25,
         }));
-        const picked = mmrRerank(mmrCandidates, k, mmrLambda);
+
+        let picked: Array<typeof candidates[number] & { mmrScore?: number; _crossEncoderScore?: number }>;
+
+        if (useRerank) {
+          // ADR-080: cross-encoder reranks the wider candidate pool, then
+          // final score = hybridWeight * hybrid + ceWeight * crossEncoder
+          // on normalised scales. Ablation showed cross-encoder alone hits
+          // 100% top-3 but loses top-1 (calibration on short commit subjects
+          // is noisy); linear combination preserves hybrid's top-1 strength
+          // while gaining the cross-encoder's recall.
+          try {
+            const { crossEncoderRerank } = await import('../memory/cross-encoder-rerank.js');
+            const { normalise } = await import('../memory/hybrid-retrieval.js');
+            const docs = candidates.map((c) => c.content || c.name);
+            const reranked = await crossEncoderRerank(query, docs);
+            const ceScores = new Array(candidates.length).fill(0);
+            for (const { index, score } of reranked) ceScores[index] = score;
+
+            const hybridNorm = normalise(candidates.map((c) => c.relevance));
+            const ceNorm = normalise(ceScores);
+            const hybridWeight = Number(input.hybridWeight ?? 0.5);
+            const ceWeight = Number(input.ceWeight ?? 0.5);
+            const combined = candidates.map((c, i) => ({
+              ...c,
+              _crossEncoderScore: ceScores[i],
+              _combinedScore: hybridWeight * hybridNorm[i] + ceWeight * ceNorm[i],
+            }));
+            picked = combined
+              .sort((a, b) => b._combinedScore - a._combinedScore)
+              .slice(0, k);
+          } catch {
+            picked = candidates.slice(0, k);
+          }
+        } else {
+          // Default path: MMR diversity over top-K*3 hybrid candidates.
+          picked = mmrRerank(candidates, k, mmrLambda);
+        }
 
         return {
           _realSimilarity: true,
@@ -660,6 +703,7 @@ export const neuralTools: MCPTool[] = [
           mode: 'hybrid',
           alpha,
           mmrLambda,
+          rerank: useRerank,
           query,
           results: picked.map((r) => ({
             id: r.id,
@@ -670,6 +714,9 @@ export const neuralTools: MCPTool[] = [
             cosineScore: r._cosine,
             bm25Score: r._bm25,
             mmrScore: r.mmrScore,
+            ...((r as { _crossEncoderScore?: number })._crossEncoderScore !== undefined
+              ? { crossEncoderScore: (r as { _crossEncoderScore?: number })._crossEncoderScore }
+              : {}),
           })),
           total: picked.length,
         };
