@@ -33,21 +33,35 @@ let _dbInitializing = false;
  * Return the sql.js Database instance for graph_edges writes.
  * Creates the graph_edges table if it is absent (idempotent).
  * Returns null if sql.js is not available or db cannot be opened.
+ *
+ * #2246 fix: `createIfMissing` (default false for back-compat) — when true,
+ * lazily creates an empty memory.db with the graph_edges schema so
+ * graph-pathfinder works on fresh environments before any memory writes.
  */
-export async function getBridgeDb(customDbPath?: string): Promise<any | null> {
+export async function getBridgeDb(customDbPath?: string, opts?: { createIfMissing?: boolean }): Promise<any | null> {
   const dbPath = customDbPath ?? path.join(getMemoryRoot(), 'memory.db');
+  const createIfMissing = opts?.createIfMissing === true;
 
   if (_db && _dbPath === dbPath) return _db;
   if (_dbInitializing) return null;
   _dbInitializing = true;
 
   try {
-    if (!fs.existsSync(dbPath)) return null;
+    const dbExists = fs.existsSync(dbPath);
+    if (!dbExists && !createIfMissing) return null;
 
     const initSqlJs = (await import('sql.js')).default;
     const SQL = await initSqlJs();
-    const fileBuffer = fs.readFileSync(dbPath);
-    const db = new SQL.Database(fileBuffer);
+    let db: any;
+    if (dbExists) {
+      const fileBuffer = fs.readFileSync(dbPath);
+      db = new SQL.Database(fileBuffer);
+    } else {
+      // Lazy-create empty DB + ensure parent dir exists.
+      const dir = path.dirname(dbPath);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      db = new SQL.Database();
+    }
 
     // Ensure graph_edges table exists (in case this is an older DB that
     // predates ADR-130 Phase 1 schema migration).
@@ -74,6 +88,15 @@ export async function getBridgeDb(customDbPath?: string): Promise<any | null> {
 
     _db = db;
     _dbPath = dbPath;
+
+    // #2246 — if we just lazy-created the DB, persist the empty file so
+    // subsequent calls can read it back without re-creating.
+    if (!dbExists && createIfMissing) {
+      try {
+        const data = db.export();
+        fs.writeFileSync(dbPath, Buffer.from(data));
+      } catch { /* non-fatal — caller will re-flush on first write */ }
+    }
     return db;
   } catch {
     return null;

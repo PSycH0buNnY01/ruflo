@@ -1,6 +1,6 @@
 {
   "name": "@claude-flow/cli",
-  "version": "3.10.28",
+  "version": "3.10.29",
   "type": "module",
   "description": "Ruflo CLI - Enterprise AI agent orchestration with 60+ specialized agents, swarm coordination, MCP server, self-learning hooks, and vector memory for Claude Code",
   "main": "dist/src/index.js",
@@ -121,7 +121,8 @@
     "@ruvector/rvagent-wasm": "^0.1.0",
     "@ruvector/sona": "^0.1.6",
     "agentdb": "^3.0.0-alpha.16",
-    "agentic-flow": "^3.0.0-alpha.1"
+    "agentic-flow": "^3.0.0-alpha.1",
+    "ruvector": "^0.2.27"
   },
   "publishConfig": {
     "access": "public",

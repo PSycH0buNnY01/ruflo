@@ -997,8 +997,10 @@ export const agentdbGraphQuery: MCPTool = {
           if (!queryEmb) throw new Error('embedding failed');
 
           const { getBridgeDb } = await import('../memory/graph-edge-writer.js');
-          const db = await getBridgeDb();
-          if (!db) return { success: false, error: 'graph_edges DB unavailable', mode, nodeId };
+          // #2246 fix: lazy-create memory.db on first pathfinder call so
+          // fresh environments work without a pre-existing memory init.
+          const db = await getBridgeDb(undefined, { createIfMissing: true });
+          if (!db) return { success: false, error: 'graph_edges DB unavailable (sql.js could not load)', hint: 'Check Node version + try `ruflo memory init` to initialize manually.', mode, nodeId };
 
           // Load all rows with embedding_ref and score by cosine
           const rowResult = db.exec(
@@ -1038,8 +1040,10 @@ export const agentdbGraphQuery: MCPTool = {
       if (mode === 'pagerank') {
         try {
           const { getBridgeDb } = await import('../memory/graph-edge-writer.js');
-          const db = await getBridgeDb();
-          if (!db) return { success: false, error: 'graph_edges DB unavailable', mode, nodeId };
+          // #2246 fix: lazy-create memory.db on first pathfinder call so
+          // fresh environments work without a pre-existing memory init.
+          const db = await getBridgeDb(undefined, { createIfMissing: true });
+          if (!db) return { success: false, error: 'graph_edges DB unavailable (sql.js could not load)', hint: 'Check Node version + try `ruflo memory init` to initialize manually.', mode, nodeId };
 
           const edgeResult = db.exec(
             `SELECT source_id, target_id, weight FROM graph_edges LIMIT ?`,
@@ -1241,8 +1245,9 @@ export const agentdbGraphPathfinder: MCPTool = {
 
       // Load edges from graph_edges
       const { getBridgeDb } = await import('../memory/graph-edge-writer.js');
-      const db = await getBridgeDb();
-      if (!db) return { success: false, error: 'graph_edges DB unavailable', seedNodeId };
+      // #2246 fix: lazy-create memory.db on first pathfinder call.
+      const db = await getBridgeDb(undefined, { createIfMissing: true });
+      if (!db) return { success: false, error: 'graph_edges DB unavailable (sql.js could not load)', hint: 'Check Node version + try `ruflo memory init` to initialize manually.', seedNodeId };
 
       const colsSql = algorithm === 'witness-chain-divergence'
         ? 'source_id, target_id, weight, last_reinforced, witness_id'

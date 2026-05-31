@@ -1,6 +1,6 @@
 {
   "name": "claude-flow",
-  "version": "3.10.28",
+  "version": "3.10.29",
   "description": "Ruflo - Enterprise AI agent orchestration for Claude Code. Deploy 60+ specialized agents in coordinated swarms with self-learning, fault-tolerant consensus, vector memory, and MCP integration",
   "main": "dist/index.js",
   "type": "module",
@@ -75,6 +75,7 @@
     "agentic-flow": "^2.0.13"
   },
   "overrides": {
+    "ruvector": "^0.2.27",
     "better-sqlite3": ">=12.8.0",
     "hono": ">=4.11.4",
     "@ruvector/rvf-wasm": "0.1.5",

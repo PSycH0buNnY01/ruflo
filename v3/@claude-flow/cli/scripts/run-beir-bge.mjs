@@ -62,6 +62,18 @@ const BASELINES_BY_DATASET = {
     'BGE-large-v1.5 (pub)': 0.722,
     'SBERT msmarco':        0.555,
   },
+  arguana: {
+    'BM25 (Lucene)':        0.397,
+    'DocT5query':           0.349,
+    'TAS-B':                0.429,
+    'GenQ':                 0.493,
+    'ColBERT':              0.233,
+    'Contriever':           0.379,
+    'GTR-XL':               0.439,
+    'SPLADE++':             0.521,
+    'BGE-large-v1.5 (pub)': 0.636,
+    'SBERT msmarco':        0.371,
+  },
 };
 
 // Auto-detect dataset from DATA_DIR path; default to nfcorpus baselines.
@@ -219,7 +231,9 @@ async function main() {
     ? [...qrels.keys()].slice(0, MAX_QUERIES)
     : [...qrels.keys()];
 
-  console.log(`\nRunning ${evalQueryIds.length} queries...`);
+  // ADR-090: BGE_QUERY_PREFIX=1 enables BAAI's recommended query prefix.
+  const USE_QUERY_PREFIX = process.env.BGE_QUERY_PREFIX === '1';
+  console.log(`\nRunning ${evalQueryIds.length} queries${USE_QUERY_PREFIX ? ' (with BGE query prefix, ADR-090)' : ''}...`);
   let nSum = 0, mSum = 0, r10Sum = 0, r100Sum = 0, n = 0;
   // ADR-086 — save per-query metrics for paired bootstrap significance testing.
   const perQuery = [];
@@ -227,8 +241,9 @@ async function main() {
   for (const qid of evalQueryIds) {
     const qtext = queriesById.get(qid);
     if (!qtext) continue;
-    // BGE v1.5 non-icl works without the query prefix.
-    const qEmb = await emb.embed(qtext);
+    // ADR-090: opt-in BGE query prefix per BAAI's docs (+0.009 nDCG@10 on
+    // NFCorpus dense-alone). Falls back to plain embed() if not enabled.
+    const qEmb = USE_QUERY_PREFIX && emb.embedQuery ? await emb.embedQuery(qtext) : await emb.embed(qtext);
     const scores = new Array(docEmbeds.length);
     for (let i = 0; i < docEmbeds.length; i++) scores[i] = { id: docIds[i], score: cosine(qEmb, docEmbeds[i]) };
     scores.sort((a, b) => b.score - a.score);

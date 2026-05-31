@@ -41,6 +41,7 @@ const MAX_QUERIES = Number(process.env.MAX_QUERIES) || 0;
 const BASELINES_BY_DATASET = {
   nfcorpus: { 'BM25 (Lucene)': 0.325, 'DocT5query': 0.328, 'TAS-B': 0.319, 'GenQ': 0.319, 'ColBERT': 0.305, 'Contriever': 0.328, 'GTR-XL': 0.343, 'SPLADE++': 0.347, 'BGE-large-v1.5 (pub)': 0.380, 'SBERT msmarco': 0.272 },
   scifact:  { 'BM25 (Lucene)': 0.679, 'DocT5query': 0.675, 'TAS-B': 0.643, 'GenQ': 0.644, 'ColBERT': 0.671, 'Contriever': 0.677, 'GTR-XL': 0.662, 'SPLADE++': 0.704, 'BGE-large-v1.5 (pub)': 0.722, 'SBERT msmarco': 0.555 },
+  arguana:  { 'BM25 (Lucene)': 0.397, 'DocT5query': 0.349, 'TAS-B': 0.429, 'GenQ': 0.493, 'ColBERT': 0.233, 'Contriever': 0.379, 'GTR-XL': 0.439, 'SPLADE++': 0.521, 'BGE-large-v1.5 (pub)': 0.636, 'SBERT msmarco': 0.371 },
 };
 function detectDataset(path) {
   const p = path.toLowerCase();
@@ -144,8 +145,10 @@ async function main() {
     const qtext = queriesById.get(qid);
     if (!qtext) continue;
 
-    // §1 — dense BGE retrieval
-    const qEmb = await emb.embed(qtext);
+    // §1 — dense BGE retrieval (ADR-090: opt-in query prefix when BGE_QUERY_PREFIX=1)
+    const qEmb = (process.env.BGE_QUERY_PREFIX === '1' && emb.embedQuery)
+      ? await emb.embedQuery(qtext)
+      : await emb.embed(qtext);
     const denseScored = new Array(docEmbeds.length);
     for (let i = 0; i < docEmbeds.length; i++) denseScored[i] = { id: docIds[i], score: cosine(qEmb, docEmbeds[i]) };
     denseScored.sort((a, b) => b.score - a.score);

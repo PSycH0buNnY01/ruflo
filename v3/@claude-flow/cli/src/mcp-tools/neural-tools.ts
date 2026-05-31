@@ -17,15 +17,51 @@ import { validateIdentifier, validateText } from './validate-input.js';
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
-// Try to import real embeddings — prefer agentic-flow v3 ReasoningBank, then @claude-flow/embeddings
+// Try to import real embeddings.
+// Tier 0 (NEW, ADR-089): ruvector@0.2.27 bundled ONNX (no sharp dep, fixes ADR-086's
+//   silent-fallback bug at source; closes the chain described in ruvnet/ruvector#523).
+// Tier 1: agentic-flow v3 ReasoningBank (was Tier 1 — broken on darwin-arm64 without sharp)
+// Tier 2-3: @claude-flow/embeddings
 let realEmbeddings: { embed: (text: string) => Promise<number[]> } | null = null;
 let embeddingServiceName: string = 'none';
 try {
-  // Tier 1: agentic-flow v3 ReasoningBank (fastest — WASM-accelerated)
-  const rb = await import('agentic-flow/reasoningbank').catch(() => null);
-  if (rb?.computeEmbedding) {
-    realEmbeddings = { embed: (text: string) => rb.computeEmbedding(text) };
-    embeddingServiceName = 'agentic-flow/reasoningbank';
+  // Tier 0: ruvector@0.2.27 — bundled all-MiniLM-L6-v2 + parallel worker pool.
+  // Probe with isOnnxAvailable() and verify an actual embed succeeds (avoids
+  // the type-load-success-but-runtime-fails trap from ADR-086).
+  // NOTE: ruvector's embed() returns `{embedding, dimension, timeMs}` — we
+  // unwrap to plain number[] for the shared interface.
+  const rv = await import('ruvector').catch(() => null) as any;
+  if (rv?.embed && typeof rv.embed === 'function' && rv.isOnnxAvailable?.()) {
+    try {
+      if (typeof rv.initOnnxEmbedder === 'function') await rv.initOnnxEmbedder();
+      const probe = await rv.embed('probe');
+      // Handle both shapes: ruvector wraps as {embedding, dimension, timeMs};
+      // some versions returned raw Float32Array.
+      const probeVec = probe?.embedding ?? probe;
+      if (probeVec && (Array.isArray(probeVec) || (probeVec as ArrayLike<number>).length > 0)) {
+        realEmbeddings = {
+          embed: async (text: string) => {
+            const r = await rv.embed(text);
+            const v = r?.embedding ?? r;
+            return Array.isArray(v) ? v : Array.from(v as ArrayLike<number>);
+          },
+        };
+        embeddingServiceName = 'ruvector@0.2.27 (bundled all-MiniLM-L6-v2)';
+      }
+    } catch {
+      // ruvector embed failed at runtime; fall through to next tier
+    }
+  }
+
+  // Tier 1: agentic-flow v3 ReasoningBank (kept for backward-compat; may
+  // silently fall back on darwin-arm64 without sharp — that's the bug
+  // Tier 0 was added to bypass).
+  if (!realEmbeddings) {
+    const rb = await import('agentic-flow/reasoningbank').catch(() => null);
+    if (rb?.computeEmbedding) {
+      realEmbeddings = { embed: (text: string) => rb.computeEmbedding(text) };
+      embeddingServiceName = 'agentic-flow/reasoningbank';
+    }
   }
 
   // Tier 2: @claude-flow/embeddings with agentic-flow provider
@@ -66,11 +102,11 @@ try {
     }
   }
 
-  // No Tier 4 mock fallback. If Tier 1 (agentic-flow) and Tier 3 (onnx)
-  // both failed to import, leave realEmbeddings null and let downstream
-  // code use the explicit hash-fallback path with a clear _embeddingNote
-  // in stats. Silently substituting mock embeddings would hide a missing
-  // production dependency from callers.
+  // No Tier 4 mock fallback. If all real-embedder tiers fail to import or
+  // probe, leave realEmbeddings null and let downstream code use the
+  // explicit hash-fallback path with a clear _embeddingNote in stats.
+  // Silently substituting mock embeddings would hide a missing production
+  // dependency from callers — that's the bug ADR-086 was about.
 } catch {
   // No embedding provider available, will use fallback
 }

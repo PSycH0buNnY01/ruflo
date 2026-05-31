@@ -15,9 +15,16 @@
 type Embedder = {
   embed(text: string): Promise<Float32Array>;
   embedBatch(texts: string[]): Promise<Float32Array[]>;
+  /** ADR-090: BGE-en-v1.5 query prefix per BAAI docs. Apply ONLY to
+   *  queries (not documents). Measured +0.009 nDCG@10 on NFCorpus
+   *  dense-alone (0.352 → 0.360). */
+  embedQuery(text: string): Promise<Float32Array>;
   dim(): number;
   modelName(): string;
 };
+
+/** BAAI BGE-en-v1.5 (non-icl) query-side prefix per their docs. */
+export const BGE_QUERY_PREFIX = 'Represent this sentence for searching relevant passages: ';
 
 let singleton: Embedder | null = null;
 let loadAttempted = false;
@@ -89,6 +96,18 @@ export async function getBgeEmbedder(modelName = 'Xenova/bge-base-en-v1.5'): Pro
           results.push(vec);
         }
         return results;
+      },
+      async embedQuery(text: string): Promise<Float32Array> {
+        // ADR-090: prepend BAAI's BGE-en-v1.5 query prefix. Measured
+        // +0.009 nDCG@10 on NFCorpus dense-alone (0.3517 → 0.3604).
+        // Same encoding pathway as embed(); just modifies the input.
+        const prefixed = BGE_QUERY_PREFIX + text;
+        const inputs = await tokenizer(prefixed, { padding: true, truncation: true, max_length: 512 });
+        const out = await model(inputs);
+        const pooled = clsPool(out);
+        const h = pooled.length;
+        l2norm(pooled, 0, h);
+        return pooled;
       },
       dim(): number {
         // Will be filled after first embed; conservative default 768 for base.

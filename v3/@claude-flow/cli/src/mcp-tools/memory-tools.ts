@@ -1056,23 +1056,58 @@ export const memoryTools: MCPTool[] = [
       properties: {
         query: { type: 'string', description: 'Search query (natural language)' },
         limit: { type: 'number', description: 'Max results (default: 10)' },
-        namespace: { type: 'string', description: 'Filter to namespace (omit for all)' },
+        namespace: { type: 'string', description: 'Filter to a single namespace (mutually exclusive with `namespaces`)' },
+        namespaces: { type: 'array', items: { type: 'string' }, description: 'Explicit list of namespaces to fan out across (overrides defaults and env)' },
       },
       required: ['query'],
     },
     handler: async (input) => {
       await ensureInitialized();
-      const { searchEntries } = await getMemoryFunctions();
+      const { searchEntries, listEntries } = await getMemoryFunctions();
       validateMemoryInput(undefined, undefined, input.query as string);
 
       const query = input.query as string;
       const limit = (input.limit as number) ?? 10;
       const ns = input.namespace as string | undefined;
+      const nsList = Array.isArray(input.namespaces) ? (input.namespaces as string[]) : undefined;
 
       if (ns) { const vNs = validateIdentifier(ns, 'namespace'); if (!vNs.valid) return { success: false, query, results: [], total: 0, error: vNs.error }; }
+      if (nsList) {
+        for (const n of nsList) { const v = validateIdentifier(n, 'namespaces[]'); if (!v.valid) return { success: false, query, results: [], total: 0, error: v.error }; }
+      }
 
-      // Search all namespaces unless filtered
-      const namespaces = ns ? [ns] : ['default', 'claude-memories', 'auto-memory', 'patterns', 'tasks', 'feedback'];
+      // #2246 fix: namespace resolution priority is
+      //   1. explicit single `namespace` (back-compat)
+      //   2. explicit `namespaces: string[]` (new in 3.10.29)
+      //   3. env var CLAUDE_FLOW_MEMORY_SEARCH_NAMESPACES (CSV)
+      //   4. dynamic enumeration via listEntries({}) over the actual store
+      //   5. legacy 6-namespace hardcode as last-resort fallback
+      // The legacy default was silently missing ~95% of entries on stores with
+      // custom namespaces (issue #2246). Dynamic enumeration fixes that.
+      const LEGACY_DEFAULT = ['default', 'claude-memories', 'auto-memory', 'patterns', 'tasks', 'feedback'];
+      let namespaces: string[];
+      let namespaceSource: 'param-single' | 'param-list' | 'env' | 'dynamic' | 'legacy-fallback';
+      if (ns) {
+        namespaces = [ns]; namespaceSource = 'param-single';
+      } else if (nsList && nsList.length > 0) {
+        namespaces = nsList; namespaceSource = 'param-list';
+      } else if (process.env.CLAUDE_FLOW_MEMORY_SEARCH_NAMESPACES) {
+        namespaces = process.env.CLAUDE_FLOW_MEMORY_SEARCH_NAMESPACES.split(',').map(s => s.trim()).filter(Boolean);
+        namespaceSource = 'env';
+      } else {
+        // Dynamic enumeration — list all entries and collect distinct namespaces.
+        // Cap entries at 100k to bound memory; in practice this is fast (<200ms).
+        try {
+          const all = await listEntries({ limit: 100000 });
+          const seenNs = new Set<string>();
+          for (const e of all?.entries ?? []) if (e.namespace) seenNs.add(e.namespace);
+          namespaces = seenNs.size > 0 ? Array.from(seenNs).sort() : LEGACY_DEFAULT;
+          namespaceSource = seenNs.size > 0 ? 'dynamic' : 'legacy-fallback';
+        } catch {
+          namespaces = LEGACY_DEFAULT; namespaceSource = 'legacy-fallback';
+        }
+      }
+
       const allResults: Array<{ key: string; content: string; score: number; namespace: string; source: string }> = [];
 
       for (const searchNs of namespaces) {
@@ -1107,6 +1142,7 @@ export const memoryTools: MCPTool[] = [
         results: deduplicated,
         total: deduplicated.length,
         searchedNamespaces: namespaces,
+        namespaceSource,        // #2246 — surface how the namespace list was resolved
         searchTime: Date.now(),
       };
     },

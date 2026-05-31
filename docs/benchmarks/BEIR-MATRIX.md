@@ -82,6 +82,42 @@ Fixing the BM25 (Porter stemmer + Lucene stopwords + length norm, single-field o
 
 We rank **3rd of 13 entries on the 2-dataset mean**. Using a 110M-param base model (vs BGE-large's 335M and GTR-XL's 1.2B).
 
+### ADR-089 — 3-dataset BEIR (3.10.29)
+
+ArguAna joins NFCorpus + SciFact. Same harness, same Lucene-style BM25, same BGE-base-en-v1.5.
+
+| Dataset | Best ruflo | Pipeline | Rank | Best Listed |
+|---|---:|---|---:|---:|
+| NFCorpus | **0.358** | Lucene + RRF + CE rerank | 2/11 | BGE-large 0.380 |
+| SciFact | **0.683** | Lucene + RRF + CE rerank | 3/11 | BGE-large 0.722 |
+| ArguAna | **0.432** | Lucene + RRF (CE rerank hurt) | 5/11 | BGE-large 0.636 |
+| **3-dataset mean** | **0.491** | mixed | — | BGE-large 0.579 |
+
+### 3-dataset means vs every listed baseline
+
+| System | Params | NFCorpus | SciFact | ArguAna | Mean |
+|---|---:|---:|---:|---:|---:|
+| BGE-large-v1.5 (published) | 335M | 0.380 | 0.722 | 0.636 | **0.579** |
+| SPLADE++ (published) | 110M | 0.347 | 0.704 | 0.521 | **0.524** |
+| GenQ (published) | 110M | 0.319 | 0.644 | 0.493 | 0.485 |
+| **ruflo best (per-dataset)** | **110M** | **0.358** | **0.683** | **0.432** | **0.491** |
+| GTR-XL (published) | 1.2B | 0.343 | 0.662 | 0.439 | 0.481 |
+| BM25 (published Lucene) | — | 0.325 | 0.679 | 0.397 | **0.467** |
+| Contriever (published) | 110M | 0.328 | 0.677 | 0.379 | 0.461 |
+| TAS-B (published) | 66M | 0.319 | 0.643 | 0.429 | 0.464 |
+| ColBERT (published) | 110M | 0.305 | 0.671 | 0.233 | 0.403 |
+| SBERT msmarco (published) | 110M | 0.272 | 0.555 | 0.371 | 0.399 |
+
+**Rank 4 of 11 entries on the 3-dataset mean.** Beats published BM25 (+0.024), beats GTR-XL (with 1/10× our params), beats Contriever, TAS-B, ColBERT, SBERT. Loses to SPLADE++ (-0.033), GenQ (-0.006, basically tied), and BGE-large (-0.088).
+
+### Counter-findings honestly reported
+
+**ArguAna kills the cross-encoder rerank.** Pulled at the 50-query checkpoint (running nDCG 0.283 vs dense alone 0.431). Estimated 6+ hours wall time and was actively hurting. ArguAna is counter-argument retrieval — rerank's pointwise relevance scoring doesn't help when the task requires understanding opposition.
+
+**BGE-large NFCorpus = no lift.** Xenova/bge-large-en-v1.5 (335M, int8 quantized) measured 0.350 vs our BGE-base 0.352 — no improvement. Below the published BAAI BGE-large baseline (0.380). Likely Xenova int8 quantization + no query prefix. ADR-089.
+
+**BGE query prefix is mixed.** Per BAAI's docs (`Represent this sentence for searching relevant passages: `): NFCorpus +0.009 ✓, SciFact -0.007 ✗, ArguAna +0.003 ~noise. Opt-in only via `BGE_QUERY_PREFIX=1`. ADR-090.
+
 > **What pipeline is reported here:** the NFCorpus 0.352 row is the **direct
 > BGE dense path** — no fine-tuning, no hybrid BM25+dense fusion, no
 > cross-encoder reranker. The hybrid pipeline (cosine + multi-field BM25 +
