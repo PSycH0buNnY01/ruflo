@@ -711,16 +711,20 @@ export class ControllerRegistry extends EventEmitter {
       }
 
       case 'hybridSearch': {
-        // ADR-125 Phase 5 — real RRF + MMR hybrid search.
-        // Calls semanticSearch() (which degrades gracefully when embedder is
-        // unavailable) AND searchKeyword() independently, fuses via RRF, then
-        // diversifies via MMR (lambda=0.7).
+        // ADR-125 Phase 5 + ADR-147 P2 — three-arm RRF + MMR hybrid search.
+        // Runs semanticSearch() (dense, with graceful fallback),
+        // searchKeyword() (sparse FTS5), and a per-entity keyword search
+        // (entity arm, gated on extractEntities(query) returning anything)
+        // independently in parallel, fuses via RRF, diversifies via MMR.
+        // Results carry a `signals` field naming which arms surfaced each
+        // entry (provenance for debugging + downstream rerankers).
         const memSvc = this.config.memoryService;
         if (!memSvc) return null;
         const adapter = typeof memSvc.getAdapter === 'function' ? memSvc.getAdapter() : null;
         if (!adapter) return null;
 
         const { applyRRF, applyMMR } = await import('./smart-retrieval.js');
+        const { extractEntities } = await import('./entity-tagger.js');
 
         return {
           /**
@@ -738,23 +742,6 @@ export class ControllerRegistry extends EventEmitter {
             const fanOutK = opts.fanOutK ?? Math.max(limit * 3, 20);
             const mmrLambda = opts.mmrLambda ?? 0.7;
 
-            // Dense arm — may internally fall back to keyword if embedder is
-            // missing, but that's still a valid signal to fuse.
-            let dense: any[] = [];
-            try {
-              dense = await adapter.semanticSearch(query, fanOutK);
-            } catch {
-              dense = [];
-            }
-
-            // Sparse arm — FTS5 / keyword search.
-            let sparse: any[] = [];
-            try {
-              sparse = await adapter.searchKeyword(query, { k: fanOutK });
-            } catch {
-              sparse = [];
-            }
-
             // Adapt SearchResult[] → SearchCandidate[] expected by RRF
             const toCands = (results: any[]) =>
               results.map((r: any) => ({
@@ -769,13 +756,59 @@ export class ControllerRegistry extends EventEmitter {
                 _entry: r.entry,
               }));
 
-            const fused = applyRRF([toCands(dense), toCands(sparse)], 60);
+            // Entity arm — only fire if the query actually contains
+            // extractable entities. Empty arm is dropped from RRF input
+            // so it doesn't dilute the fusion.
+            const entities = extractEntities(query);
+            const entityFanOut = entities.length > 0
+              ? Math.max(1, Math.ceil(fanOutK / entities.length))
+              : 0;
+
+            // Run all three arms in parallel. Per-arm try/catch (via the
+            // .catch(...) tails) keeps one failing backend from blanking
+            // the other arms — the same defensive shape used pre-ADR-147.
+            const [dense, sparse, entityHits] = await Promise.all([
+              adapter.semanticSearch(query, fanOutK).catch(() => [] as any[]),
+              adapter.searchKeyword(query, { k: fanOutK }).catch(() => [] as any[]),
+              entities.length > 0
+                ? Promise.all(
+                    entities.map((e: string) =>
+                      adapter.searchKeyword(e, { k: entityFanOut }).catch(() => [] as any[]),
+                    ),
+                  ).then((perEntity: any[][]) => perEntity.flat())
+                : Promise.resolve([] as any[]),
+            ]);
+
+            const denseCands = toCands(dense);
+            const sparseCands = toCands(sparse);
+            const entityCands = toCands(entityHits);
+
+            // Build signal-provenance sets keyed by candidate id BEFORE
+            // RRF so we can stamp `signals` onto the fused output.
+            const candKey = (c: { id?: string; key?: string; content: string }) =>
+              c.id || c.key || c.content.slice(0, 128);
+            const denseIds = new Set(denseCands.map(candKey));
+            const sparseIds = new Set(sparseCands.map(candKey));
+            const entityIds = new Set(entityCands.map(candKey));
+
+            const arms = [denseCands, sparseCands];
+            if (entityCands.length > 0) arms.push(entityCands);
+
+            const fused = applyRRF(arms, 60);
             const diverse = applyMMR(fused, mmrLambda, limit);
 
-            return diverse.map((s: any) => ({
-              entry: s.candidate._entry,
-              score: s.score,
-            }));
+            return diverse.map((s: any) => {
+              const key = candKey(s.candidate);
+              const signals: ('vector' | 'bm25' | 'entity')[] = [];
+              if (denseIds.has(key)) signals.push('vector');
+              if (sparseIds.has(key)) signals.push('bm25');
+              if (entityIds.has(key)) signals.push('entity');
+              return {
+                entry: s.candidate._entry,
+                score: s.score,
+                signals,
+              };
+            });
           },
           source: 'hybrid-rrf-mmr' as const,
         };

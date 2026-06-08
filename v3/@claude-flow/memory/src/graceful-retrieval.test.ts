@@ -153,6 +153,61 @@ describe('Phase 5 — hybridSearch controller (RRF + MMR)', () => {
     // Hybrid should return up to `limit` entries (10 here, given 50 stored).
     expect(results.length).toBeLessThanOrEqual(10);
 
+    // ADR-147: every result carries provenance — at least one signal name.
+    for (const r of results) {
+      expect(Array.isArray(r.signals)).toBe(true);
+      expect(r.signals.length).toBeGreaterThan(0);
+      for (const s of r.signals) {
+        expect(['vector', 'bm25', 'entity']).toContain(s);
+      }
+    }
+
+    await registry.shutdown();
+    await svc.close();
+  });
+
+  it('ADR-147 — entity arm surfaces proper-noun matches above vector noise', async () => {
+    // Store 30 generic "authentication" entries (no Alice) + a single
+    // entry mentioning "Alice Smith" — the proper-noun bigram extractEntities
+    // should pick up. The entity arm should boost the Alice entry above
+    // the 30 generic ones for a query that names Alice explicitly.
+    const dim = 8;
+    const svc = new MemoryService({
+      dimensions: dim,
+      persistenceEnabled: false,
+      snapshotInterval: 0,
+      embeddingGenerator: async (text: string) => randomVec(dim, hashStr(text)),
+    });
+    await svc.initialize();
+
+    for (let i = 0; i < 30; i++) {
+      const entry = createDefaultEntry({
+        key: `generic-${i}`,
+        content: `authentication and authorization patterns ${i}`,
+      });
+      entry.embedding = randomVec(dim, hashStr(entry.content));
+      await svc.store(entry);
+    }
+    const aliceEntry = createDefaultEntry({
+      key: 'alice-needle',
+      content: 'Alice Smith authored these authentication flows',
+    });
+    aliceEntry.embedding = randomVec(dim, hashStr(aliceEntry.content));
+    await svc.store(aliceEntry);
+
+    const registry = new ControllerRegistry();
+    await registry.initialize({ memoryService: svc });
+
+    const hybrid = registry.get<any>('hybridSearch');
+    const results = await hybrid.search('Alice Smith authentication', { limit: 10 });
+
+    // The Alice entry should appear in the top-10 fused results.
+    const alice = results.find((r: any) => r.entry.key === 'alice-needle');
+    expect(alice).toBeTruthy();
+    // …and should carry the 'entity' provenance signal (it's the only entry
+    // that matches the "Alice Smith" proper-noun bigram).
+    expect(alice.signals).toContain('entity');
+
     await registry.shutdown();
     await svc.close();
   });
