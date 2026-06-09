@@ -1,20 +1,33 @@
 /**
- * Intelligent Model Router using Tiny Dancer
+ * Intelligent Model Router — lexical complexity heuristic + Thompson bandit
  *
- * Dynamically routes requests to optimal Claude model (haiku/sonnet/opus)
- * based on task complexity, confidence scores, and historical performance.
+ * Dynamically routes requests to the optimal Claude model (haiku/sonnet/opus)
+ * based on task complexity, uncertainty, and online-learned routing outcomes.
  *
- * Features:
- * - FastGRNN-based routing decisions (<100μs)
- * - Uncertainty quantification for model escalation
- * - Circuit breaker for failover
- * - Online learning from routing outcomes
- * - Complexity scoring via embeddings
+ * Mechanism (shipped):
+ * - Complexity score = blend of lexical, semantic-depth, task-scope, and
+ *   uncertainty heuristics (see `computeLexicalComplexity` and friends).
+ *   Pure JS arithmetic — no model load, no tensor math.
+ * - Model selection = Thompson-sampling Beta-Bernoulli bandit with
+ *   complexity-bucketed Beta(α,β) priors, persisted to
+ *   `.swarm/model-router-state.json` and updated by `recordOutcome` after
+ *   each routing decision.
+ * - Uncertainty quantification + a circuit breaker drive escalation when
+ *   the bandit's confidence is low or downstream failures are observed.
  *
  * Routing Strategy:
- * - Haiku: High confidence, low complexity (fast, cheap)
- * - Sonnet: Medium confidence, moderate complexity (balanced)
- * - Opus: Low confidence, high complexity (most capable)
+ * - Haiku: high confidence, low complexity (fast, cheap)
+ * - Sonnet: medium confidence, moderate complexity (balanced)
+ * - Opus: low confidence, high complexity (most capable)
+ *
+ * Note (#2329): An earlier design (ADR-026 + this file's previous header)
+ * described a Tiny-Dancer / FastGRNN neural router with embedding-based
+ * complexity scoring. That path was never wired in — `@ruvector/tiny-dancer`
+ * is not imported here and the `embedding`-consuming branch in
+ * `computeSemanticDepth` is only reachable via the externally-callable
+ * `routeToModelFull(task, embedding)` wrapper (no internal callers). The
+ * shipped router is the heuristic + bandit described above; the neural
+ * path remains a future direction tracked in #2329.
  *
  * @module model-router
  */

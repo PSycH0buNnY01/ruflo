@@ -4134,7 +4134,10 @@ export const hooksModelRoute: MCPTool = {
       alternatives: result.alternatives,
       inferenceTimeUs: result.inferenceTimeUs,
       costMultiplier: result.costMultiplier,
-      implementation: 'tiny-dancer-neural',
+      // Historical name kept for telemetry / dashboard schema stability.
+      // The shipped router is the heuristic + Thompson-bandit described in
+      // ruvector/model-router.ts — not a neural network. See #2329.
+      implementation: 'heuristic-thompson-bandit',
     };
   },
 };
