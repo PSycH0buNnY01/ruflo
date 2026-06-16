@@ -170,6 +170,16 @@ if (!od.metaharness) { console.error('missing metaharness in optionalDependencie
 if (j.dependencies && j.dependencies.metaharness) { console.error('metaharness leaked into dependencies'); process.exit(1); }
 " 2>/dev/null && ok || bad "ruflo wrapper missing metaharness optionalDep"
 
+step "17b. harness type in plugin registry (Phase 2 — iter 6)"
+F="$ROOT/../../v3/@claude-flow/cli/src/plugins/store/types.ts"
+miss=""
+[[ -f "$F" ]] || miss="$miss types-file-missing"
+grep -q "'harness'" "$F" 2>/dev/null || miss="$miss no-harness-type"
+grep -q "ADR-150" "$F" 2>/dev/null || miss="$miss no-adr-anchor"
+D="$ROOT/../../v3/@claude-flow/cli/src/plugins/store/discovery.ts"
+grep -q "id: 'harness'" "$D" 2>/dev/null || miss="$miss no-harness-category"
+[[ -z "$miss" ]] && ok || bad "$miss"
+
 step "17. eject command — Phase 2 differentiator (iter 4)"
 F="$ROOT/../../v3/@claude-flow/cli/src/commands/eject.ts"
 miss=""

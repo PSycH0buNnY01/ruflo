@@ -236,6 +236,9 @@ export class PluginDiscoveryService {
         { id: 'integrations', name: 'Integrations', description: 'Third-party integrations', pluginCount: 2 },
         { id: 'agents', name: 'Agents', description: 'Custom agent types', pluginCount: 1 },
         { id: 'iot', name: 'IoT', description: 'IoT device management and fleet orchestration', pluginCount: 1 },
+        // ADR-150 — MetaHarness-generated standalone harnesses
+        // surface alongside plugins. Filter via `--type harness`.
+        { id: 'harness', name: 'Harness', description: 'MetaHarness-generated standalone agent harnesses (ADR-150)', pluginCount: 0 },
       ],
       authors: [
         {
