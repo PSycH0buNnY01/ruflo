@@ -191,6 +191,27 @@ grep -q "execCli(\[\s*'-y'\s*,\s*'metaharness@latest'" "$F" 2>/dev/null || \
 grep -q "cwd: opts" "$F" || miss="$miss no-cwd-passthrough"
 [[ -z "$miss" ]] && ok || bad "$miss"
 
+step "17z56. every MCP tool documented in CLAUDE.md (iter 93)"
+miss=""
+# CLAUDE.md is the agent-facing tool catalog. Each MCP tool registered
+# in metaharness-tools.ts should appear at least once in CLAUDE.md so
+# agents browsing the catalog discover it. If a future iter adds a tool
+# but forgets the CLAUDE.md update, the tool exists but is invisible.
+WRAPPER="$ROOT/../../v3/@claude-flow/cli/src/mcp-tools/metaharness-tools.ts"
+CMD="$ROOT/../../CLAUDE.md"
+TOOLS=$(grep -oE "name: 'metaharness_[a-z_]+'" "$WRAPPER" 2>/dev/null \
+  | sed -E "s/name: '([a-z_]+)'/\1/" | sort -u)
+COUNT=0
+for t in $TOOLS; do
+  COUNT=$((COUNT + 1))
+  # Look for `mcp__claude-flow__metaharness_X` (the agent-facing name form)
+  grep -q "mcp__claude-flow__${t}" "$CMD" 2>/dev/null \
+    || miss="$miss ${t}-not-in-claude-md"
+done
+# Lock count: 9 MCP tools (mint deliberately excluded — see iter 73)
+[[ "$COUNT" == "9" ]] || miss="$miss mcp-tool-count-stale:$COUNT-expected-9"
+[[ -z "$miss" ]] && ok || bad "$miss"
+
 step "17z55. MCP enum + SEVERITY_RANK vocabulary aligned (iter 92)"
 miss=""
 # Two sources of severity vocabulary:
